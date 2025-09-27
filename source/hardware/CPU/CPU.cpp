@@ -24,8 +24,8 @@ namespace nes
       {
          switch (auto const opcode = static_cast<Opcode>(memory_[program_counter_++]))
          {
-            case Opcode::BRK_implied:
-               current_instruction_ = BRK_implied();
+            case Opcode::BRK_IMPLIED:
+               current_instruction_ = brk_implied();
                break;
 
             default:
