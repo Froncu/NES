@@ -52,7 +52,7 @@ namespace nes
          processor_status_ &= ~underlying_flag;
    }
 
-   Instruction CPU::BRK_implied()
+   Instruction CPU::brk_implied()
    {
       // read next instruction byte (and throw it away), increment PC
       std::ignore = memory_[program_counter_++];

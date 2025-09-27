@@ -193,7 +193,7 @@ namespace nes
       private:
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
 
-         [[nodiscard]] Instruction BRK_IMPLIED();
+         [[nodiscard]] Instruction brk_implied();
 
          Memory& memory_;
 
