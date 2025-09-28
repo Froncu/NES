@@ -1,7 +1,7 @@
 #ifndef CPU_HPP
 #define CPU_HPP
 
-#include "Instruction.hpp"
+#include "instruction.hpp"
 #include "pch.hpp"
 
 namespace nes
