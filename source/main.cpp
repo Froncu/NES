@@ -1,9 +1,17 @@
+#include <SDL3/SDL_main.h>
+
 #include "exceptions/unsupported_instruction.hpp"
 #include "hardware/CPU/CPU.hpp"
+#include "services/locator.hpp"
+#include "services/logger/logger.hpp"
+#include "services/visualiser/visualiser.hpp"
 
-int main()
+int main(int, char**)
 {
-   std::array<std::uint8_t, 65'536> memory{};
+   nes::Locator::provide<nes::Logger>();
+   nes::Locator::provide<nes::Visualiser>();
+
+   std::array<std::uint8_t, 0x10000> memory{};
    memory[0xFFFD] = 0x06;
    memory[0xFFFC] = 0x00;
    memory[0x0600] = 0x01;
@@ -27,4 +35,7 @@ int main()
       }
 
    std::println("completed {} cycles!", processor.cycle());
+
+   nes::Locator::remove_providers();
+   return 0;
 }

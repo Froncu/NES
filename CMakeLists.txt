@@ -16,3 +16,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_compile_options(${PROJECT_NAME}
    PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic -Werror>
    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>)
+
+find_package(SDL3 REQUIRED CONFIG COMPONENTS SDL3-static)
+find_package(imgui REQUIRED CONFIG)
+
+target_link_libraries(${PROJECT_NAME}
+   PRIVATE SDL3::SDL3-static
+   PRIVATE imgui::imgui)

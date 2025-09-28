@@ -180,7 +180,7 @@ namespace nes
 
          explicit CPU(Memory& memory);
          CPU(CPU const&) = delete;
-         CPU(CPU&&) = default;
+         CPU(CPU&&) = delete;
 
          ~CPU() = default;
 
@@ -201,7 +201,7 @@ namespace nes
          std::uint16_t cycle_ = 0;
          std::uint16_t program_counter_ = 0x0000;
          std::uint8_t accumulator_ = 0x00;
-         std::uint8_t x_ = 0x01;
+         std::uint8_t x_ = 0x00;
          std::uint8_t y_ = 0x00;
          std::uint8_t stack_pointer_ = 0xFF;
          std::uint8_t processor_status_ = 0b00000000;
