@@ -29,9 +29,14 @@ namespace nes
                current_instruction_ = brk_implied();
                break;
 
+            case Opcode::ORA_X_INDIRECT:
+               current_instruction_ = ora_x_indirect();
+               break;
+
             default:
                throw UnsupportedInstruction{
-                  static_cast<std::underlying_type_t<Opcode>>(opcode), static_cast<decltype(program_counter_)>(program_counter_ - 1)
+                  static_cast<std::underlying_type_t<Opcode>>(opcode),
+                  static_cast<decltype(program_counter_)>(program_counter_ - 1)
                };
          }
 
@@ -62,7 +67,7 @@ namespace nes
       co_await std::suspend_always{};
 
       // push PCH on stack (with B flag set), decrement S
-      processor_status_ |= 0b00010000;
+      change_processor_status_flag(ProcessorStatusFlag::B, true);
       memory_[0x0100 + stack_pointer_--] = program_counter_ >> 8 & 0x00FF;
       co_await std::suspend_always{};
 
@@ -81,5 +86,37 @@ namespace nes
       // fetch PCH
       program_counter_ |= memory_[0xFFFF] << 8;
       co_return false;
+   }
+
+   Instruction CPU::ora_x_indirect()
+   {
+      // fetch pointer address, increment PC
+      std::uint8_t const pointer_address = memory_[program_counter_++];
+      co_await std::suspend_always{};
+
+      // read from the address, add X to it
+      std::uint8_t const pointer = memory_[pointer_address] + x_;
+      co_await std::suspend_always{};
+
+      // fetch effective address low
+      std::uint8_t const effective_address_low = memory_[pointer];
+      co_await std::suspend_always{};
+
+      // fetch effective address high
+      std::uint8_t const effective_address_high = memory_[pointer + 1];
+      co_await std::suspend_always{};
+
+      // read from effective address
+      std::uint16_t const effective_address = effective_address_high << 8 | effective_address_low;
+      std::uint8_t const value = memory_[effective_address];
+      accumulator_ |= value;
+
+      // Z set if the accumulator is zero after ORA
+      change_processor_status_flag(ProcessorStatusFlag::Z, not accumulator_);
+
+      // N set if bit 7 of the accumulator is set after ORA
+      change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b10000000);
+
+      co_return true;
    }
 }
