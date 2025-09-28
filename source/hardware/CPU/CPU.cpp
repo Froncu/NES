@@ -1,4 +1,5 @@
 #include "CPU.hpp"
+#include "exceptions/unsupported_instruction.hpp"
 
 namespace nes
 {
@@ -29,7 +30,9 @@ namespace nes
                break;
 
             default:
-               throw std::runtime_error{ std::format("opcode 0x{:02X} is not supported", static_cast<std::uint8_t>(opcode)) };
+               throw UnsupportedInstruction{
+                  static_cast<std::underlying_type_t<Opcode>>(opcode), static_cast<decltype(program_counter_)>(program_counter_ - 1)
+               };
          }
 
          continue_execution = true;

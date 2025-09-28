@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <exception>
 #include <format>
 #include <functional>
 #include <generator>
