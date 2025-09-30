@@ -20,6 +20,10 @@
 #include <typeindex>
 #include <unordered_set>
 
+#include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_sdlrenderer3.h>
+#include <imgui_memory_editor.h>
 #include <SDL3/SDL.h>
 
 #endif

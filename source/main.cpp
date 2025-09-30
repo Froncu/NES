@@ -9,7 +9,7 @@
 int main(int, char**)
 {
    nes::Locator::provide<nes::Logger>();
-   nes::Locator::provide<nes::Visualiser>();
+   auto& visualiser = nes::Locator::provide<nes::Visualiser>();
 
    std::array<std::uint8_t, 0x10000> memory{};
    memory[0xFFFD] = 0x06;
@@ -21,12 +21,12 @@ int main(int, char**)
    memory[0x0012] = 0xAA;
    memory[0xAABB] = 0xFF;
 
-   nes::CPU processor{ memory };
+   nes::CPU const processor{ memory };
 
    while (true)
       try
       {
-         if (not processor.tick())
+         if (not visualiser.tick(memory))
             break;
       }
       catch (nes::UnsupportedInstruction const& exception)
