@@ -1,14 +1,14 @@
 #ifndef UNSUPPORTED_INSTRUCTION_HPP
 #define UNSUPPORTED_INSTRUCTION_HPP
 
-#include "emulator_exception.hpp"
+#include "emulation_exception.hpp"
 
 namespace nes
 {
-   class UnsupportedInstruction final : public EmulatorException
+   class UnsupportedInstruction final : public EmulationException
    {
       public:
-         explicit UnsupportedInstruction(std::uint8_t instruction, std::uint16_t program_counter);
+         explicit UnsupportedInstruction(std::uint16_t program_counter, std::uint8_t instruction);
          UnsupportedInstruction(UnsupportedInstruction const&) = default;
          UnsupportedInstruction(UnsupportedInstruction&&) = default;
 

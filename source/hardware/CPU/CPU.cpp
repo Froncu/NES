@@ -35,8 +35,8 @@ namespace nes
 
             default:
                throw UnsupportedInstruction{
-                  static_cast<std::underlying_type_t<Opcode>>(opcode),
-                  static_cast<decltype(program_counter_)>(program_counter_ - 1)
+                  static_cast<decltype(program_counter_)>(program_counter_ - 1),
+                  static_cast<std::underlying_type_t<Opcode>>(opcode)
                };
          }
 
