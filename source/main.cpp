@@ -31,7 +31,7 @@ int main(int, char**)
          {
             continue_execution = processor.tick();
          }
-         catch (nes::UnsupportedInstruction const& exception)
+         catch (nes::EmulationException const& exception)
          {
             logger.error(exception.what());
          }

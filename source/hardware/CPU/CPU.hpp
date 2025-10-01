@@ -199,6 +199,8 @@ namespace nes
 
       private:
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
+         void push(std::uint8_t value);
+         std::uint8_t pop();
 
          [[nodiscard]] Instruction brk_implied();
          [[nodiscard]] Instruction ora_x_indirect();

@@ -83,7 +83,7 @@ namespace nes
             SDL_DestroyRenderer
          };
 
-         ImGuiBackend const imgui_backend_ = { *window_, *renderer_ };
+         ImGuiBackend const imgui_backend_{ *window_, *renderer_ };
 
          int bytes_per_row_ = 16;
 

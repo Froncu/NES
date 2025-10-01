@@ -90,6 +90,16 @@ namespace nes
          processor_status_ &= ~underlying_flag;
    }
 
+   void CPU::push(std::uint8_t const value)
+   {
+      memory_[0x0100 + stack_pointer_--] = value;
+   }
+
+   std::uint8_t CPU::pop()
+   {
+      return memory_[0x0100 + ++stack_pointer_];
+   }
+
    Instruction CPU::brk_implied()
    {
       // read next instruction byte (and throw it away), increment PC
@@ -98,15 +108,15 @@ namespace nes
 
       // push PCH on stack (with B flag set), decrement S
       change_processor_status_flag(ProcessorStatusFlag::B, true);
-      memory_[0x0100 + stack_pointer_--] = program_counter_ >> 8 & 0x00FF;
+      push(program_counter_ >> 8 & 0x00FF);
       co_await std::suspend_always{};
 
       // push PCL on stack, decrement S
-      memory_[0x0100 + stack_pointer_--] = program_counter_ & 0x00FF;
+      push(program_counter_ & 0x00FF);
       co_await std::suspend_always{};
 
       // push P on stack, decrement S
-      memory_[0x0100 + stack_pointer_--] = processor_status_;
+      push(processor_status_);
       co_await std::suspend_always{};
 
       // fetch PCL
