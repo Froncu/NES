@@ -8,7 +8,7 @@
 
 int main(int, char**)
 {
-   nes::Locator::provide<nes::Logger>();
+   auto& logger = nes::Locator::provide<nes::Logger>();
    auto& visualiser = nes::Locator::provide<nes::Visualiser>();
 
    std::array<std::uint8_t, 0x10000> memory{};
@@ -16,6 +16,7 @@ int main(int, char**)
    memory[0xFFFC] = 0x00;
    memory[0x0600] = 0x01;
    memory[0x0601] = 0x55;
+   memory[0x0602] = 0x02;
    memory[0x0055] = 0x10;
    memory[0x0011] = 0xBB;
    memory[0x0012] = 0xAA;
@@ -32,10 +33,10 @@ int main(int, char**)
          }
          catch (nes::UnsupportedInstruction const& exception)
          {
-            std::println("{}", exception.what());
+            logger.error(exception.what());
          }
 
-   std::println("completed {} cycles!", processor.cycle());
+   logger.info("completed {} cycles!", processor.cycle());
 
    nes::Locator::remove_providers();
    return 0;
