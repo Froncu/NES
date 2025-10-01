@@ -5,14 +5,24 @@
 
 namespace nes
 {
-   class InstructionPromise;
-
    class Instruction final
    {
-      public:
-         using promise_type = InstructionPromise;
+      struct Promise final
+      {
+         static std::suspend_always initial_suspend() noexcept;
+         static std::suspend_always final_suspend() noexcept;
+         static void unhandled_exception();
 
-         explicit Instruction(std::coroutine_handle<InstructionPromise> handle);
+         Instruction get_return_object();
+         void return_value(bool return_value);
+
+         bool continue_execution = true;
+      };
+
+      public:
+         using promise_type = Promise;
+
+         explicit Instruction(std::coroutine_handle<Promise> handle);
          Instruction(Instruction const&) = delete;
          Instruction(Instruction&& other) noexcept;
 
@@ -28,32 +38,7 @@ namespace nes
       private:
          void destroy_handle() const;
 
-         std::coroutine_handle<InstructionPromise> handle_;
-   };
-
-   class InstructionPromise final
-   {
-      public:
-         InstructionPromise() = default;
-         InstructionPromise(InstructionPromise const&) = default;
-         InstructionPromise(InstructionPromise&&) = default;
-
-         ~InstructionPromise() = default;
-
-         InstructionPromise& operator=(InstructionPromise const&) = default;
-         InstructionPromise& operator=(InstructionPromise&&) = default;
-
-         static std::suspend_always initial_suspend() noexcept;
-         static std::suspend_always final_suspend() noexcept;
-         static void unhandled_exception();
-
-         Instruction get_return_object();
-         void return_value(bool continue_execution);
-
-         [[nodiscard]] bool continue_execution() const;
-
-      private:
-         bool continue_execution_ = true;
+         std::coroutine_handle<Promise> handle_;
    };
 }
 

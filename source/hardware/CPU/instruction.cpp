@@ -2,7 +2,32 @@
 
 namespace nes
 {
-   Instruction::Instruction(std::coroutine_handle<InstructionPromise> const handle)
+   std::suspend_always Instruction::Promise::initial_suspend() noexcept
+   {
+      return {};
+   }
+
+   std::suspend_always Instruction::Promise::final_suspend() noexcept
+   {
+      return {};
+   }
+
+   void Instruction::Promise::unhandled_exception()
+   {
+      std::terminate();
+   }
+
+   Instruction Instruction::Promise::get_return_object()
+   {
+      return Instruction{ std::coroutine_handle<Promise>::from_promise(*this) };
+   }
+
+   void Instruction::Promise::return_value(bool const return_value)
+   {
+      continue_execution = return_value;
+   }
+
+   Instruction::Instruction(std::coroutine_handle<Promise> const handle)
       : handle_{ handle }
    {
    }
@@ -33,7 +58,7 @@ namespace nes
 
    bool Instruction::continue_execution() const
    {
-      return handle_.promise().continue_execution();
+      return handle_.promise().continue_execution;
    }
 
    bool Instruction::done() const
@@ -45,35 +70,5 @@ namespace nes
    {
       if (handle_)
          handle_.destroy();
-   }
-
-   std::suspend_always InstructionPromise::initial_suspend() noexcept
-   {
-      return {};
-   }
-
-   std::suspend_always InstructionPromise::final_suspend() noexcept
-   {
-      return {};
-   }
-
-   void InstructionPromise::unhandled_exception()
-   {
-      std::terminate();
-   }
-
-   Instruction InstructionPromise::get_return_object()
-   {
-      return Instruction{ std::coroutine_handle<InstructionPromise>::from_promise(*this) };
-   }
-
-   void InstructionPromise::return_value(bool const continue_execution)
-   {
-      continue_execution_ = continue_execution;
-   }
-
-   bool InstructionPromise::continue_execution() const
-   {
-      return continue_execution_;
    }
 }
