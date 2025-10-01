@@ -20,6 +20,11 @@ namespace nes
 
       succeeded = ImGui_ImplSDLRenderer3_Init(&renderer);
       runtime_assert(succeeded, "failed to initialize ImGui for SDL renderer");
+
+      ImGuiIO& input_output = ImGui::GetIO();
+      input_output.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+      input_output.ConfigDockingWithShift = true;
+      input_output.ConfigDockingTransparentPayload = true;
    }
 
    Visualiser::ImGuiBackend::~ImGuiBackend()
@@ -28,7 +33,7 @@ namespace nes
       ImGui_ImplSDL3_Shutdown();
    }
 
-   bool Visualiser::tick(std::array<std::uint8_t, 0x10000>& memory)
+   bool Visualiser::tick(std::array<std::uint8_t, 0x10000> const& memory)
    {
       SDL_Event event;
       while (SDL_PollEvent(&event))
@@ -48,22 +53,49 @@ namespace nes
       ImGui_ImplSDLRenderer3_NewFrame();
       ImGui_ImplSDL3_NewFrame();
       ImGui::NewFrame();
-
-      MemoryEditor::Sizes sizes;
-      memory_editor_.CalcSizes(sizes, memory.size(), 0);
-      ImGui::SetNextWindowSize({ sizes.WindowWidth, sizes.WindowWidth * 0.60f }, ImGuiCond_FirstUseEver);
-      ImGui::SetNextWindowSizeConstraints({}, { sizes.WindowWidth, std::numeric_limits<float>::max() });
-      if (ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse))
       {
-         memory_editor_.DrawContents(memory.data(), memory.size(), 0);
-         if (memory_editor_.ContentsWidthChanged)
+         ImGui::DockSpaceOverViewport();
          {
-            memory_editor_.CalcSizes(sizes, memory.size(), 0);
-            ImGui::SetWindowSize(ImVec2(sizes.WindowWidth, ImGui::GetWindowSize().y));
+            ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
+            {
+               ImGui::BeginChild("MemoryRegion", { 0, 300 }, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
+               {
+                  ImGuiListClipper clipper;
+                  clipper.Begin(static_cast<int>(std::ceil(static_cast<double>(memory.size()) / bytes_per_row_)));
+                  {
+                     while (clipper.Step())
+                        for (int row_index = clipper.DisplayStart; row_index < clipper.DisplayEnd; ++row_index)
+                        {
+                           int const base_column_index = row_index * bytes_per_row_;
+                           ImGui::Text("%04X:", base_column_index);
+                           ImGui::SameLine();
+
+                           int const max_column_index = std::min((row_index + 1) * bytes_per_row_,
+                              static_cast<int>(memory.size()));
+                           for (int column_index = base_column_index; column_index < max_column_index; ++column_index)
+                           {
+                              std::uint8_t const byte = memory[column_index];
+                              if (byte == 0)
+                                 ImGui::PushStyleColor(ImGuiCol_Text, { 0.5f, 0.5f, 0.5f, 1.0f });
+
+                              ImGui::Text("%02X", byte);
+
+                              if (byte == 0)
+                                 ImGui::PopStyleColor();
+
+                              if (column_index < max_column_index - 1)
+                                 ImGui::SameLine();
+                           }
+                        }
+                  }
+                  clipper.End();
+               }
+               ImGui::EndChild();
+               ImGui::InputInt("Bytes per row", &bytes_per_row_, 1, 1);
+            }
+            ImGui::End();
          }
       }
-      ImGui::End();
-
       ImGui::Render();
       SDL_RenderClear(renderer_.get());
       ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer_.get());

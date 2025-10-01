@@ -49,7 +49,7 @@ namespace nes
          Visualiser& operator=(Visualiser const&) = delete;
          Visualiser& operator=(Visualiser&&) = delete;
 
-         [[nodiscard]] bool tick(std::array<std::uint8_t, 0x10000>& memory);
+         [[nodiscard]] bool tick(std::array<std::uint8_t, 0x10000> const& memory);
 
       private:
          SDL_Context const context_ = {};
@@ -73,13 +73,16 @@ namespace nes
                SDL_Renderer* const renderer = SDL_CreateRenderer(window_.get(), nullptr);
                runtime_assert(renderer, "failed to create renderer ({})", SDL_GetError());
 
+               SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_DISABLED);
+
                return renderer;
             }(),
             SDL_DestroyRenderer
          };
 
          ImGuiBackend const imgui_backend_ = { *window_, *renderer_ };
-         MemoryEditor memory_editor_ = {};
+
+         int bytes_per_row_ = 16;
    };
 }
 
