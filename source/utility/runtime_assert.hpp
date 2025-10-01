@@ -12,14 +12,14 @@ namespace nes
       [[maybe_unused]] std::format_string<Arguments...> const format,
       [[maybe_unused]] Arguments&&... arguments)
    {
-      if constexpr (not DEBUG)
-         return;
+      if constexpr (DEBUG)
+      {
+         if (condition)
+            return;
 
-      if (condition)
-         return;
-
-      Locator::get<Logger>()->error<StackTraceDepth + 1>(format, std::forward<Arguments>(arguments)...);
-      std::abort();
+         Locator::get<Logger>()->error<StackTraceDepth + 1>(format, std::forward<Arguments>(arguments)...);
+         std::abort();
+      }
    }
 
    template <typename Message>
