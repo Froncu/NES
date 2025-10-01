@@ -21,18 +21,19 @@ int main(int, char**)
    memory[0x0012] = 0xAA;
    memory[0xAABB] = 0xFF;
 
-   nes::CPU const processor{ memory };
+   nes::CPU processor{ memory };
 
-   while (true)
-      try
-      {
-         if (not visualiser.tick(memory))
-            break;
-      }
-      catch (nes::UnsupportedInstruction const& exception)
-      {
-         std::println("{}", exception.what());
-      }
+   bool continue_execution = true;
+   while (visualiser.update(memory, processor))
+      if (continue_execution && visualiser.tick())
+         try
+         {
+            continue_execution = processor.tick();
+         }
+         catch (nes::UnsupportedInstruction const& exception)
+         {
+            std::println("{}", exception.what());
+         }
 
    std::println("completed {} cycles!", processor.cycle());
 

@@ -52,6 +52,36 @@ namespace nes
       return cycle_;
    }
 
+   std::uint16_t CPU::program_counter() const
+   {
+      return program_counter_;
+   }
+
+   std::uint8_t CPU::accumulator() const
+   {
+      return accumulator_;
+   }
+
+   std::uint8_t CPU::x() const
+   {
+      return x_;
+   }
+
+   std::uint8_t CPU::y() const
+   {
+      return y_;
+   }
+
+   std::uint8_t CPU::stack_pointer() const
+   {
+      return stack_pointer_;
+   }
+
+   std::uint8_t CPU::processor_status() const
+   {
+      return processor_status_;
+   }
+
    void CPU::change_processor_status_flag(ProcessorStatusFlag const flag, bool const set)
    {
       if (auto const underlying_flag = static_cast<std::underlying_type_t<ProcessorStatusFlag>>(flag); set)

@@ -33,7 +33,7 @@ namespace nes
       ImGui_ImplSDL3_Shutdown();
    }
 
-   bool Visualiser::tick(std::array<std::uint8_t, 0x10000> const& memory)
+   bool Visualiser::update(std::array<std::uint8_t, 0x10000> const& memory, CPU const& processor)
    {
       SDL_Event event;
       while (SDL_PollEvent(&event))
@@ -94,6 +94,19 @@ namespace nes
                ImGui::InputInt("Bytes per row", &bytes_per_row_, 1, 1);
             }
             ImGui::End();
+
+            ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
+            {
+               ImGui::Text("Cycle: %u", processor.cycle());
+               ImGui::Text("PC: %04X", processor.program_counter());
+               ImGui::Text("A: %02X", processor.accumulator());
+               ImGui::Text("X: %02X", processor.x());
+               ImGui::Text("Y: %02X", processor.y());
+               ImGui::Text("S: %02X", processor.stack_pointer());
+               ImGui::Text(std::format("P: {:08b}", processor.processor_status()).c_str());
+               tick_ = ImGui::Button("Tick");
+            }
+            ImGui::End();
          }
       }
       ImGui::Render();
@@ -102,5 +115,10 @@ namespace nes
       SDL_RenderPresent(renderer_.get());
 
       return true;
+   }
+
+   bool Visualiser::tick() const
+   {
+      return tick_;
    }
 }

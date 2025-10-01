@@ -187,8 +187,15 @@ namespace nes
          CPU& operator=(CPU const&) = delete;
          CPU& operator=(CPU&&) = delete;
 
-         [[nodiscard]] bool tick();
+         bool tick();
+
          [[nodiscard]] std::uint16_t cycle() const;
+         [[nodiscard]] std::uint16_t program_counter() const;
+         [[nodiscard]] std::uint8_t accumulator() const;
+         [[nodiscard]] std::uint8_t x() const;
+         [[nodiscard]] std::uint8_t y() const;
+         [[nodiscard]] std::uint8_t stack_pointer() const;
+         [[nodiscard]] std::uint8_t processor_status() const;
 
       private:
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);

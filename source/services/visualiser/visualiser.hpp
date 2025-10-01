@@ -1,6 +1,7 @@
 #ifndef VISUALISER_HPP
 #define VISUALISER_HPP
 
+#include "hardware/CPU/CPU.hpp"
 #include "pch.hpp"
 #include "utility/runtime_assert.hpp"
 
@@ -49,7 +50,9 @@ namespace nes
          Visualiser& operator=(Visualiser const&) = delete;
          Visualiser& operator=(Visualiser&&) = delete;
 
-         [[nodiscard]] bool tick(std::array<std::uint8_t, 0x10000> const& memory);
+         [[nodiscard]] bool update(std::array<std::uint8_t, 0x10000> const& memory, CPU const& processor);
+
+         [[nodiscard]] bool tick() const;
 
       private:
          SDL_Context const context_ = {};
@@ -83,6 +86,8 @@ namespace nes
          ImGuiBackend const imgui_backend_ = { *window_, *renderer_ };
 
          int bytes_per_row_ = 16;
+
+         bool tick_ = false;
    };
 }
 
