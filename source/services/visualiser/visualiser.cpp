@@ -25,6 +25,7 @@ namespace nes
       input_output.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
       input_output.ConfigDockingWithShift = true;
       input_output.ConfigDockingTransparentPayload = true;
+      input_output.FontGlobalScale = SDL_GetWindowDisplayScale(&window);
    }
 
    Visualiser::ImGuiBackend::~ImGuiBackend()
@@ -58,11 +59,21 @@ namespace nes
          {
             ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
             {
-               ImGui::BeginChild("MemoryRegion", { 0, 300 }, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
+               // TODO: the MemoryRegion's height is not correct
+               float const item_height = ImGui::GetTextLineHeightWithSpacing();
+               ImGui::BeginChild("MemoryRegion", { 0, item_height * visible_rows_ }, ImGuiChildFlags_Borders,
+                  ImGuiWindowFlags_HorizontalScrollbar);
                {
-                  ImGuiListClipper clipper;
-                  clipper.Begin(static_cast<int>(std::ceil(static_cast<double>(memory.size()) / bytes_per_row_)));
+                  ImGuiListClipper clipper{};
+                  clipper.Begin(static_cast<int>(std::ceil(static_cast<double>(memory.size()) / bytes_per_row_)), item_height);
                   {
+                     if (jump_requested_)
+                     {
+                        jump_address_ = std::clamp(jump_address_, {}, static_cast<std::uint16_t>(memory.size() - 1));
+                        float const target_row = jump_address_ / bytes_per_row_ - visible_rows_ / 2.0f + 0.5f;
+                        ImGui::SetScrollY(target_row * item_height);
+                     }
+
                      while (clipper.Step())
                         for (int row_index = clipper.DisplayStart; row_index < clipper.DisplayEnd; ++row_index)
                         {
@@ -70,8 +81,9 @@ namespace nes
                            ImGui::Text("%04X:", base_column_index);
                            ImGui::SameLine();
 
-                           int const max_column_index = std::min((row_index + 1) * bytes_per_row_,
-                              static_cast<int>(memory.size()));
+                           int const max_column_index =
+                              std::min((row_index + 1) * bytes_per_row_, static_cast<int>(memory.size()));
+
                            for (int column_index = base_column_index; column_index < max_column_index; ++column_index)
                            {
                               std::uint8_t const byte = memory[column_index];
@@ -79,6 +91,10 @@ namespace nes
                                  ImGui::PushStyleColor(ImGuiCol_Text, { 0.5f, 0.5f, 0.5f, 1.0f });
 
                               ImGui::Text("%02X", byte);
+
+                              if (column_index == jump_address_)
+                                 ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                                    IM_COL32(255, 255, 255, 255));
 
                               if (byte == 0)
                                  ImGui::PopStyleColor();
@@ -91,7 +107,12 @@ namespace nes
                   clipper.End();
                }
                ImGui::EndChild();
+
+               jump_requested_ = ImGui::InputScalar("Jump to address", ImGuiDataType_U16, &jump_address_, nullptr, nullptr,
+                  "%04X", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+
                ImGui::InputInt("Bytes per row", &bytes_per_row_, 1, 1);
+               ImGui::InputInt("Visible rows", &visible_rows_, 1, 1);
             }
             ImGui::End();
 

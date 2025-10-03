@@ -61,7 +61,7 @@ namespace nes
          {
             []
             {
-               SDL_Window* const window = SDL_CreateWindow("Emulator", 1280, 720, 0);
+               SDL_Window* const window = SDL_CreateWindow("Emulator", 1280, 720, SDL_WINDOW_RESIZABLE);
                runtime_assert(window, "failed to create window ({})", SDL_GetError());
 
                return window;
@@ -85,9 +85,12 @@ namespace nes
 
          ImGuiBackend const imgui_backend_{ *window_, *renderer_ };
 
+         std::uint16_t jump_address_ = 0;
          int bytes_per_row_ = 16;
+         int visible_rows_ = 16;
 
          bool tick_ = false;
+         bool jump_requested_ = false;
    };
 }
 
