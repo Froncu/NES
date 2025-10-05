@@ -201,6 +201,7 @@ namespace nes
          void push(Data value);
          Data pop();
 
+         [[nodiscard]] Instruction reset();
          [[nodiscard]] Instruction brk_implied();
          [[nodiscard]] Instruction ora_x_indirect();
 

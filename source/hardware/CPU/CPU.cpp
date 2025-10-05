@@ -5,8 +5,8 @@ namespace nes
 {
    CPU::CPU(Memory& memory)
       : memory_{ memory }
+      , current_instruction_{ reset() }
    {
-      program_counter_ = memory_[0xFFFD] << 8 | memory_[0xFFFC];
    }
 
    bool CPU::tick()
@@ -98,6 +98,28 @@ namespace nes
    Data CPU::pop()
    {
       return memory_[0x0100 + ++stack_pointer_];
+   }
+
+   // TODO: find what exactly happens here
+   Instruction CPU::reset()
+   {
+      co_await std::suspend_always{};
+      co_await std::suspend_always{};
+
+      --stack_pointer_;
+      co_await std::suspend_always{};
+
+      --stack_pointer_;
+      co_await std::suspend_always{};
+
+      --stack_pointer_;
+      co_await std::suspend_always{};
+
+      program_counter_ = memory_[0xFFFC];
+      co_await std::suspend_always{};
+
+      program_counter_ |= memory_[0xFFFD] << 8;
+      co_return true;
    }
 
    Instruction CPU::brk_implied()
