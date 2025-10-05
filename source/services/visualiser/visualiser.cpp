@@ -147,7 +147,7 @@ namespace nes
                   tick_ = ImGui::Button("Tick");
                }
                else
-                  tick_ = true;
+                  tick_ = false;
             }
             ImGui::End();
          }
@@ -158,6 +158,11 @@ namespace nes
       SDL_RenderPresent(renderer_.get());
 
       return true;
+   }
+
+   bool Visualiser::run() const
+   {
+      return run_;
    }
 
    bool Visualiser::tick() const

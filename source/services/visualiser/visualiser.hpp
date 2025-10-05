@@ -52,6 +52,7 @@ namespace nes
 
          [[nodiscard]] bool update(Memory const& memory, CPU const& processor);
 
+         [[nodiscard]] bool run() const;
          [[nodiscard]] bool tick() const;
 
       private:
@@ -75,8 +76,6 @@ namespace nes
             {
                SDL_Renderer* const renderer = SDL_CreateRenderer(window_.get(), nullptr);
                runtime_assert(renderer, "failed to create renderer ({})", SDL_GetError());
-
-               SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_DISABLED);
 
                return renderer;
             }(),
