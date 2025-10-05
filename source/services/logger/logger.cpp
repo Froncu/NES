@@ -55,8 +55,9 @@ namespace nes
             break;
       }
 
+      std::string payload_source_file = payload.location.source_file();
       std::string const source_file_location =
-         std::format("{}({})", payload.location.source_file(), payload.location.source_line());
+         payload_source_file.empty() ? "unknown" : std::format("{}({})", payload_source_file, payload.location.source_line());
 
       std::time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
       std::tm local_time;
