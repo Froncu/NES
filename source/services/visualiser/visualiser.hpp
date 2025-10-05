@@ -89,8 +89,9 @@ namespace nes
          int bytes_per_row_ = 16;
          int visible_rows_ = 16;
 
-         bool tick_ = false;
          bool jump_requested_ = false;
+         bool run_ = false;
+         bool tick_ = false;
    };
 }
 

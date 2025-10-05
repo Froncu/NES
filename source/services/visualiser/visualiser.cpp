@@ -124,8 +124,30 @@ namespace nes
                ImGui::Text("X: %02X", processor.x());
                ImGui::Text("Y: %02X", processor.y());
                ImGui::Text("S: %02X", processor.stack_pointer());
-               ImGui::Text(std::format("P: {:08b}", processor.processor_status()).c_str());
-               tick_ = ImGui::Button("Tick");
+
+               auto const cast = [](CPU::ProcessorStatusFlag const flag)
+               {
+                  return static_cast<std::underlying_type_t<CPU::ProcessorStatusFlag>>(flag);
+               };
+
+               ProcessorStatus const processor_status = processor.processor_status();
+               ImGui::Text(std::format("P: {}{}{}{}{}{}{}{}",
+                  processor_status & cast(CPU::ProcessorStatusFlag::N) ? 'N' : '-',
+                  processor_status & cast(CPU::ProcessorStatusFlag::V) ? 'V' : '-',
+                  processor_status & cast(CPU::ProcessorStatusFlag::_) ? '_' : '-',
+                  processor_status & cast(CPU::ProcessorStatusFlag::B) ? 'B' : '-',
+                  processor_status & cast(CPU::ProcessorStatusFlag::D) ? 'D' : '-',
+                  processor_status & cast(CPU::ProcessorStatusFlag::I) ? 'I' : '-',
+                  processor_status & cast(CPU::ProcessorStatusFlag::Z) ? 'Z' : '-',
+                  processor_status & cast(CPU::ProcessorStatusFlag::C) ? 'C' : '-').c_str());
+
+               if (ImGui::Checkbox("Run", &run_); not run_)
+               {
+                  ImGui::SameLine();
+                  tick_ = ImGui::Button("Tick");
+               }
+               else
+                  tick_ = true;
             }
             ImGui::End();
          }

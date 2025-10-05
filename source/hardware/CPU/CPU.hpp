@@ -164,19 +164,19 @@ namespace nes
          INC_ABSOLUTE_x = 0xFE
       };
 
-      enum class ProcessorStatusFlag : ProcessorStatus
-      {
-         C = 0b00000001,
-         Z = 0b00000010,
-         I = 0b00000100,
-         D = 0b00001000,
-         B = 0b00010000,
-         _ = 0b00100000,
-         V = 0b01000000,
-         N = 0b10000000
-      };
-
       public:
+         enum class ProcessorStatusFlag : ProcessorStatus
+         {
+            C = 0b00000001,
+            Z = 0b00000010,
+            I = 0b00000100,
+            D = 0b00001000,
+            B = 0b00010000,
+            _ = 0b00100000,
+            V = 0b01000000,
+            N = 0b10000000
+         };
+
          explicit CPU(Memory& memory);
          CPU(CPU const&) = delete;
          CPU(CPU&&) = delete;
