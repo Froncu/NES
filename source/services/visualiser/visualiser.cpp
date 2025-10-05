@@ -34,7 +34,7 @@ namespace nes
       ImGui_ImplSDL3_Shutdown();
    }
 
-   bool Visualiser::update(std::array<std::uint8_t, 0x10000> const& memory, CPU const& processor)
+   bool Visualiser::update(Memory const& memory, CPU const& processor)
    {
       SDL_Event event;
       while (SDL_PollEvent(&event))
@@ -69,7 +69,7 @@ namespace nes
                   {
                      if (jump_requested_)
                      {
-                        jump_address_ = std::clamp(jump_address_, {}, static_cast<std::uint16_t>(memory.size() - 1));
+                        jump_address_ = std::clamp(jump_address_, {}, static_cast<ProgramCounter>(memory.size() - 1));
                         float const target_row = jump_address_ / bytes_per_row_ - visible_rows_ / 2.0f + 0.5f;
                         ImGui::SetScrollY(target_row * item_height);
                      }
@@ -86,7 +86,7 @@ namespace nes
 
                            for (int column_index = base_column_index; column_index < max_column_index; ++column_index)
                            {
-                              std::uint8_t const byte = memory[column_index];
+                              Data const byte = memory[column_index];
                               if (byte == 0)
                                  ImGui::PushStyleColor(ImGuiCol_Text, { 0.5f, 0.5f, 0.5f, 1.0f });
 

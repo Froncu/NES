@@ -1,6 +1,7 @@
 #ifndef CPU_HPP
 #define CPU_HPP
 
+#include "hardware/memory/memory.hpp"
 #include "instruction.hpp"
 #include "pch.hpp"
 
@@ -8,7 +9,7 @@ namespace nes
 {
    class CPU final
    {
-      enum class Opcode : std::uint8_t
+      enum class Opcode : Data
       {
          BRK_IMPLIED = 0x00,
          ORA_X_INDIRECT = 0x01,
@@ -163,7 +164,7 @@ namespace nes
          INC_ABSOLUTE_x = 0xFE
       };
 
-      enum class ProcessorStatusFlag : std::uint8_t
+      enum class ProcessorStatusFlag : ProcessorStatus
       {
          C = 0b00000001,
          Z = 0b00000010,
@@ -176,8 +177,6 @@ namespace nes
       };
 
       public:
-         using Memory = std::array<std::uint8_t, 65'536>;
-
          explicit CPU(Memory& memory);
          CPU(CPU const&) = delete;
          CPU(CPU&&) = delete;
@@ -189,31 +188,31 @@ namespace nes
 
          bool tick();
 
-         [[nodiscard]] std::uint16_t cycle() const;
-         [[nodiscard]] std::uint16_t program_counter() const;
-         [[nodiscard]] std::uint8_t accumulator() const;
-         [[nodiscard]] std::uint8_t x() const;
-         [[nodiscard]] std::uint8_t y() const;
-         [[nodiscard]] std::uint8_t stack_pointer() const;
-         [[nodiscard]] std::uint8_t processor_status() const;
+         [[nodiscard]] Cycle cycle() const;
+         [[nodiscard]] ProgramCounter program_counter() const;
+         [[nodiscard]] Accumulator accumulator() const;
+         [[nodiscard]] X x() const;
+         [[nodiscard]] Y y() const;
+         [[nodiscard]] StackPointer stack_pointer() const;
+         [[nodiscard]] ProcessorStatus processor_status() const;
 
       private:
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
-         void push(std::uint8_t value);
-         std::uint8_t pop();
+         void push(Data value);
+         Data pop();
 
          [[nodiscard]] Instruction brk_implied();
          [[nodiscard]] Instruction ora_x_indirect();
 
          Memory& memory_;
 
-         std::uint16_t cycle_ = 0;
-         std::uint16_t program_counter_ = 0x0000;
-         std::uint8_t accumulator_ = 0x00;
-         std::uint8_t x_ = 0x00;
-         std::uint8_t y_ = 0x00;
-         std::uint8_t stack_pointer_ = 0xFF;
-         std::uint8_t processor_status_ = 0b00000000;
+         Cycle cycle_ = 0;
+         ProgramCounter program_counter_ = 0x0000;
+         Accumulator accumulator_ = 0x00;
+         X x_ = 0x00;
+         Y y_ = 0x00;
+         StackPointer stack_pointer_ = 0xFF;
+         ProcessorStatus processor_status_ = 0b00000000;
 
          std::optional<Instruction> current_instruction_;
    };

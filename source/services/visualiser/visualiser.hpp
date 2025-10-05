@@ -50,7 +50,7 @@ namespace nes
          Visualiser& operator=(Visualiser const&) = delete;
          Visualiser& operator=(Visualiser&&) = delete;
 
-         [[nodiscard]] bool update(std::array<std::uint8_t, 0x10000> const& memory, CPU const& processor);
+         [[nodiscard]] bool update(Memory const& memory, CPU const& processor);
 
          [[nodiscard]] bool tick() const;
 
@@ -85,7 +85,7 @@ namespace nes
 
          ImGuiBackend const imgui_backend_{ *window_, *renderer_ };
 
-         std::uint16_t jump_address_ = 0;
+         ProgramCounter jump_address_ = 0;
          int bytes_per_row_ = 16;
          int visible_rows_ = 16;
 

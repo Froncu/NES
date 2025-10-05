@@ -1,7 +1,8 @@
 #include <SDL3/SDL_main.h>
 
-#include "exceptions/unsupported_instruction.hpp"
+#include "exceptions/unsupported_opcode.hpp"
 #include "hardware/CPU/CPU.hpp"
+#include "hardware/memory/memory.hpp"
 #include "services/locator.hpp"
 #include "services/logger/logger.hpp"
 #include "services/visualiser/visualiser.hpp"
@@ -11,7 +12,7 @@ int main(int, char**)
    auto& logger = nes::Locator::provide<nes::Logger>();
    auto& visualiser = nes::Locator::provide<nes::Visualiser>();
 
-   std::array<std::uint8_t, 0x10000> memory{};
+   nes::Memory memory{};
    memory[0xFFFD] = 0x06;
    memory[0xFFFC] = 0x00;
    memory[0x0600] = 0x01;
@@ -35,8 +36,6 @@ int main(int, char**)
          {
             logger.error(exception.what());
          }
-
-   logger.info("completed {} cycles!", processor.cycle());
 
    nes::Locator::remove_providers();
    return 0;

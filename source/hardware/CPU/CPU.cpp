@@ -1,5 +1,5 @@
 #include "CPU.hpp"
-#include "exceptions/unsupported_instruction.hpp"
+#include "exceptions/unsupported_opcode.hpp"
 
 namespace nes
 {
@@ -34,7 +34,7 @@ namespace nes
                break;
 
             default:
-               throw UnsupportedInstruction{
+               throw UnsupportedOpcode{
                   static_cast<decltype(program_counter_)>(program_counter_ - 1),
                   static_cast<std::underlying_type_t<Opcode>>(opcode)
                };
@@ -47,37 +47,37 @@ namespace nes
       return continue_execution;
    }
 
-   std::uint16_t CPU::cycle() const
+   Cycle CPU::cycle() const
    {
       return cycle_;
    }
 
-   std::uint16_t CPU::program_counter() const
+   ProgramCounter CPU::program_counter() const
    {
       return program_counter_;
    }
 
-   std::uint8_t CPU::accumulator() const
+   Accumulator CPU::accumulator() const
    {
       return accumulator_;
    }
 
-   std::uint8_t CPU::x() const
+   X CPU::x() const
    {
       return x_;
    }
 
-   std::uint8_t CPU::y() const
+   Y CPU::y() const
    {
       return y_;
    }
 
-   std::uint8_t CPU::stack_pointer() const
+   StackPointer CPU::stack_pointer() const
    {
       return stack_pointer_;
    }
 
-   std::uint8_t CPU::processor_status() const
+   ProcessorStatus CPU::processor_status() const
    {
       return processor_status_;
    }
@@ -90,12 +90,12 @@ namespace nes
          processor_status_ &= ~underlying_flag;
    }
 
-   void CPU::push(std::uint8_t const value)
+   void CPU::push(Data const value)
    {
       memory_[0x0100 + stack_pointer_--] = value;
    }
 
-   std::uint8_t CPU::pop()
+   Data CPU::pop()
    {
       return memory_[0x0100 + ++stack_pointer_];
    }

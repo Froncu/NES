@@ -2,9 +2,14 @@
 
 namespace nes
 {
-   EmulationException::EmulationException(std::string what, std::uint16_t program_counter)
+   EmulationException::EmulationException(ProgramCounter const program_counter, std::string what)
       : EmulatorException{ std::move(what) }
       , program_counter{ program_counter }
+   {
+   }
+
+   EmulationException::EmulationException(ProgramCounter const program_counter)
+      : EmulationException{ program_counter, std::format("encountered an emulation error at 0x{:04X}", program_counter) }
    {
    }
 }
