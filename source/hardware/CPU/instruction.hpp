@@ -12,11 +12,9 @@ namespace nes
          static std::suspend_always initial_suspend() noexcept;
          static std::suspend_always final_suspend() noexcept;
          static void unhandled_exception();
+         static void return_void();
 
          Instruction get_return_object();
-         void return_value(bool return_value);
-
-         bool continue_execution = true;
       };
 
       public:
@@ -32,7 +30,6 @@ namespace nes
          Instruction& operator=(Instruction&& other) noexcept;
 
          void resume() const;
-         [[nodiscard]] bool continue_execution() const;
          [[nodiscard]] bool done() const;
 
       private:

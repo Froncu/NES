@@ -25,12 +25,11 @@ int main(int, char**)
 
    nes::CPU processor{ memory };
 
-   bool continue_execution = true;
    while (visualiser.update(memory, processor))
-      if (continue_execution && visualiser.tick())
+      if (visualiser.tick())
          try
          {
-            continue_execution = processor.tick();
+            processor.tick();
          }
          catch (nes::EmulationException const& exception)
          {

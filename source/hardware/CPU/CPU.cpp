@@ -9,20 +9,16 @@ namespace nes
    {
    }
 
-   bool CPU::tick()
+   void CPU::tick()
    {
-      bool continue_execution;
-
       if (current_instruction_)
       {
          current_instruction_->resume();
-         continue_execution = current_instruction_->continue_execution();
 
          if (current_instruction_->done())
             current_instruction_.reset();
       }
       else
-      {
          switch (auto const opcode = static_cast<Opcode>(memory_[program_counter_++]))
          {
             case Opcode::BRK_IMPLIED:
@@ -40,11 +36,7 @@ namespace nes
                };
          }
 
-         continue_execution = true;
-      }
-
       ++cycle_;
-      return continue_execution;
    }
 
    Cycle CPU::cycle() const
@@ -119,7 +111,7 @@ namespace nes
       co_await std::suspend_always{};
 
       program_counter_ |= memory_[0xFFFD] << 8;
-      co_return true;
+      co_return;
    }
 
    Instruction CPU::brk_implied()
@@ -147,7 +139,7 @@ namespace nes
 
       // fetch PCH
       program_counter_ |= memory_[0xFFFF] << 8;
-      co_return false;
+      co_return;
    }
 
    Instruction CPU::ora_x_indirect()
@@ -179,6 +171,6 @@ namespace nes
       // N set if bit 7 of the accumulator is set after ORA
       change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b10000000);
 
-      co_return true;
+      co_return;
    }
 }

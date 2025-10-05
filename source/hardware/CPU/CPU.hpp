@@ -186,7 +186,7 @@ namespace nes
          CPU& operator=(CPU const&) = delete;
          CPU& operator=(CPU&&) = delete;
 
-         bool tick();
+         void tick();
 
          [[nodiscard]] Cycle cycle() const;
          [[nodiscard]] ProgramCounter program_counter() const;

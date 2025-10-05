@@ -17,14 +17,13 @@ namespace nes
       std::terminate();
    }
 
+   void Instruction::Promise::return_void()
+   {
+   }
+
    Instruction Instruction::Promise::get_return_object()
    {
       return Instruction{ std::coroutine_handle<Promise>::from_promise(*this) };
-   }
-
-   void Instruction::Promise::return_value(bool const return_value)
-   {
-      continue_execution = return_value;
    }
 
    Instruction::Instruction(std::coroutine_handle<Promise> const handle)
@@ -54,11 +53,6 @@ namespace nes
    void Instruction::resume() const
    {
       handle_.resume();
-   }
-
-   bool Instruction::continue_execution() const
-   {
-      return handle_.promise().continue_execution;
    }
 
    bool Instruction::done() const
