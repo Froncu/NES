@@ -13,7 +13,7 @@ void tick(nes::CPU& processor) try
 }
 catch (nes::EmulationException const& exception)
 {
-   nes::Locator::get<nes::Logger>()->error(exception.what());
+   nes::Locator::get<nes::Logger>()->error(exception.what(), false, exception.location());
 }
 
 int main(int, char**)
@@ -28,7 +28,7 @@ int main(int, char**)
    memory[0xFFFC] = 0x00;
    memory[0x0600] = 0x01;
    memory[0x0601] = 0x55;
-   // memory[0x0602] = 0x02;
+   memory[0x0602] = 0x02;
    memory[0x0055] = 0x10;
    memory[0x0011] = 0xBB;
    memory[0x0012] = 0xAA;

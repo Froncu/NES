@@ -9,7 +9,8 @@ namespace nes
    class EmulationException : public EmulatorException
    {
       public:
-         EmulationException(ProgramCounter program_counter, std::string what);
+         EmulationException(ProgramCounter program_counter, std::string what,
+            std::source_location location = std::source_location::current());
          explicit EmulationException(ProgramCounter program_counter);
          EmulationException(EmulationException const&) = default;
          EmulationException(EmulationException&&) = default;

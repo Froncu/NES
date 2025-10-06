@@ -8,7 +8,8 @@ namespace nes
    class UnsupportedOpcode final : public EmulationException
    {
       public:
-         explicit UnsupportedOpcode(ProgramCounter program_counter, Data opcode);
+         explicit UnsupportedOpcode(ProgramCounter program_counter, Data opcode,
+            std::source_location location = std::source_location::current());
          UnsupportedOpcode(UnsupportedOpcode const&) = default;
          UnsupportedOpcode(UnsupportedOpcode&&) = default;
 

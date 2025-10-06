@@ -2,8 +2,8 @@
 
 namespace nes
 {
-   EmulationException::EmulationException(ProgramCounter const program_counter, std::string what)
-      : EmulatorException{ std::move(what) }
+   EmulationException::EmulationException(ProgramCounter const program_counter, std::string what, std::source_location location)
+      : EmulatorException{ std::move(what), std::move(location) }
       , program_counter{ program_counter }
    {
    }
