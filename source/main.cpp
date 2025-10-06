@@ -47,8 +47,8 @@ int main(int, char**)
          if ((cycle_accumulator += nes::CPU::FREQUENCY * frame_time) > nes::CPU::CYCLES_PER_FRAME)
          {
             auto const discarded_cycles = cycle_accumulator - nes::CPU::CYCLES_PER_FRAME;
-            logger.warning("exceeded the cycles per frame limit by {:5.2f}%; discarding {:.0f} cycles",
-               discarded_cycles / nes::CPU::CYCLES_PER_FRAME * 100, discarded_cycles);
+            logger.warning(std::format("exceeded the cycles per frame limit by {:5.2f}%; discarding {:.0f} cycles",
+               discarded_cycles / nes::CPU::CYCLES_PER_FRAME * 100, discarded_cycles));
 
             cycle_accumulator = nes::CPU::CYCLES_PER_FRAME;
          }

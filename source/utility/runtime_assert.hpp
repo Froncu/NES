@@ -7,25 +7,17 @@
 
 namespace nes
 {
-   template <std::stacktrace::size_type StackTraceDepth = 0, typename... Arguments>
-   constexpr void runtime_assert([[maybe_unused]] bool const condition,
-      [[maybe_unused]] std::format_string<Arguments...> const format,
-      [[maybe_unused]] Arguments&&... arguments)
+   template <typename Message>
+   constexpr void runtime_assert(bool const condition, Message&& message, std::source_location location = std::source_location::current())
    {
       if constexpr (DEBUG)
       {
          if (condition)
             return;
 
-         Locator::get<Logger>()->error<StackTraceDepth + 1>(format, std::forward<Arguments>(arguments)...);
+         Locator::get<Logger>()->error(std::forward<Message>(message), std::move(location));
          std::abort();
       }
-   }
-
-   template <typename Message>
-   constexpr void runtime_assert(bool const condition, Message&& message)
-   {
-      runtime_assert<1>(condition, "{}", std::forward<Message>(message));
    }
 }
 

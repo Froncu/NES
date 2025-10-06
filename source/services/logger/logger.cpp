@@ -1,4 +1,45 @@
 #include "logger.hpp"
+#include "utility/hash.hpp"
+
+namespace std
+{
+   size_t hash<source_location>::operator()(source_location const& location) const noexcept
+   {
+      size_t const hash_1 = nes::hash(location.file_name());
+      size_t const hash_2 = nes::hash(location.line());
+      size_t const hash_3 = nes::hash(location.column());
+      size_t const hash_4 = nes::hash(location.function_name());
+
+      size_t seed = 0;
+      auto const generate = [&seed](size_t const hash)
+      {
+         seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      };
+
+      generate(hash_1);
+      generate(hash_2);
+      generate(hash_3);
+      generate(hash_4);
+
+      return seed;
+   }
+
+   bool equal_to<source_location>::operator()(source_location const& location_a,
+      source_location const& location_b) const noexcept
+   {
+      if (location_a.line() not_eq location_b.line() or
+         location_a.column() not_eq location_b.column())
+         return false;
+
+      if (location_a.file_name() == location_b.file_name() and
+         location_a.function_name() == location_b.function_name())
+         return true;
+
+      return
+         not std::strcmp(location_a.file_name(), location_b.file_name()) and
+         not std::strcmp(location_a.function_name(), location_b.function_name());
+   }
+}
 
 namespace nes
 {
@@ -10,13 +51,6 @@ namespace nes
       }
 
       condition_.notify_one();
-   }
-
-   std::stacktrace_entry Logger::location(std::stacktrace::size_type stack_trace_depth)
-   {
-      stack_trace_depth += 2;
-      auto const stack_trace = std::stacktrace::current(stack_trace_depth, 1);
-      return stack_trace[0];
    }
 
    void Logger::log(Payload const& payload)
@@ -55,10 +89,6 @@ namespace nes
             break;
       }
 
-      std::string payload_source_file = payload.location.source_file();
-      std::string const source_file_location =
-         payload_source_file.empty() ? "unknown" : std::format("{}({})", payload_source_file, payload.location.source_line());
-
       std::time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
       std::tm local_time;
       localtime_s(&local_time, &now);
@@ -66,16 +96,17 @@ namespace nes
       time_stream << std::put_time(&local_time, "%H:%M:%S");
 
       std::println(*output_stream,
-         "\033[{}m>> {}\n[{}]: {}\033[0m",
+         "\033[{}m>> {}({})\n[{}]: {}\033[0m",
          esc_sequence,
-         source_file_location,
+         payload.location.file_name(),
+         payload.location.line(),
          time_stream.str(),
          payload.message);
    }
 
    void Logger::log_once(Payload const& payload)
    {
-      if (payload.location and not stacktrace_entries_.insert(payload.location).second)
+      if (not location_entries_.insert(payload.location).second)
          return;
 
       return log(payload);

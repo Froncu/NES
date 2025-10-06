@@ -63,7 +63,7 @@ namespace nes
             []
             {
                SDL_Window* const window = SDL_CreateWindow("Emulator", 1280, 720, SDL_WINDOW_RESIZABLE);
-               runtime_assert(window, "failed to create window ({})", SDL_GetError());
+               runtime_assert(window, std::format("failed to create window ({})", SDL_GetError()));
 
                return window;
             }(),
@@ -75,7 +75,7 @@ namespace nes
             [this]
             {
                SDL_Renderer* const renderer = SDL_CreateRenderer(window_.get(), nullptr);
-               runtime_assert(renderer, "failed to create renderer ({})", SDL_GetError());
+               runtime_assert(renderer, std::format("failed to create renderer ({})", SDL_GetError()));
 
                return renderer;
             }(),
