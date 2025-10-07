@@ -15,7 +15,7 @@ namespace nes
          if (condition)
             return;
 
-         Locator::get<Logger>()->error(std::forward<Message>(message), std::move(location));
+         Locator::get<Logger>()->error(std::forward<Message>(message), false, std::move(location));
          std::abort();
       }
    }
