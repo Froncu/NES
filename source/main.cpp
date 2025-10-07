@@ -44,13 +44,14 @@ int main(int, char**)
 
       if (visualiser.run())
       {
-         if ((cycle_accumulator += nes::CPU::FREQUENCY * frame_time) > nes::CPU::CYCLES_PER_FRAME)
+         if (auto constexpr MAX_CYCLES_PER_FRAME = 1'000'000;
+            (cycle_accumulator += nes::CPU::FREQUENCY * frame_time) > MAX_CYCLES_PER_FRAME)
          {
-            auto const discarded_cycles = cycle_accumulator - nes::CPU::CYCLES_PER_FRAME;
-            logger.warning(std::format("exceeded the cycles per frame limit by {:5.2f}%; discarding {:.0f} cycles",
-               discarded_cycles / nes::CPU::CYCLES_PER_FRAME * 100, discarded_cycles));
+            auto const discarded_cycles = cycle_accumulator - MAX_CYCLES_PER_FRAME;
+            logger.warning(std::format("exceeded max cycles per frame by {:5.2f}%; discarding {:.0f} cycles",
+               discarded_cycles / MAX_CYCLES_PER_FRAME * 100, discarded_cycles));
 
-            cycle_accumulator = nes::CPU::CYCLES_PER_FRAME;
+            cycle_accumulator = MAX_CYCLES_PER_FRAME;
          }
 
          while (cycle_accumulator-- >= 1)

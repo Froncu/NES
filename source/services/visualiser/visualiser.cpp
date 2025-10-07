@@ -118,6 +118,8 @@ namespace nes
 
             ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
             {
+               ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+
                ImGui::Text("Cycle: %u", processor.cycle());
                ImGui::Text("PC: %04X", processor.program_counter());
                ImGui::Text("A: %02X", processor.accumulator());

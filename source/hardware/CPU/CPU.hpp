@@ -178,8 +178,6 @@ namespace nes
          };
 
          static auto constexpr FREQUENCY = 1'789'773;
-         static auto constexpr TARGET_REFRESH_RATE = 60.0988;
-         static auto constexpr CYCLES_PER_FRAME = FREQUENCY / TARGET_REFRESH_RATE;
 
          explicit CPU(Memory& memory);
          CPU(CPU const&) = delete;
