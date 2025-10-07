@@ -54,12 +54,10 @@ namespace nes
       return accumulator_;
    }
 
-   X CPU::x() const
    {
       return x_;
    }
 
-   Y CPU::y() const
    {
       return y_;
    }

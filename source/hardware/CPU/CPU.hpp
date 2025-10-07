@@ -212,8 +212,8 @@ namespace nes
          Cycle cycle_ = 0;
          ProgramCounter program_counter_ = 0x0000;
          Accumulator accumulator_ = 0x00;
-         X x_ = 0x00;
-         Y y_ = 0x00;
+         Index x_ = 0x00;
+         Index y_ = 0x00;
          StackPointer stack_pointer_ = 0xFF;
          ProcessorStatus processor_status_ = 0b00000000;
 
