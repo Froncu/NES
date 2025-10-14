@@ -1,0 +1,11 @@
+{
+   "dependencies": [
+      {
+         "name": "sdl3"
+      },
+      {
+         "name": "imgui",
+         "features": ["sdl3-renderer-binding", "sdl3-binding", "docking-experimental"]
+      }
+   ]
+}

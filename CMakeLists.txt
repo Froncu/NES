@@ -19,8 +19,8 @@ target_compile_options(${PROJECT_NAME}
    PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic -Werror>
    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>)
 
-find_package(SDL3 REQUIRED CONFIG COMPONENTS SDL3-static)
-find_package(imgui REQUIRED CONFIG)
+find_package(SDL3 CONFIG REQUIRED COMPONENTS SDL3-static)
+find_package(imgui CONFIG REQUIRED COMPONENTS imgui-static)
 
 target_link_libraries(${PROJECT_NAME}
    PRIVATE SDL3::SDL3-static
