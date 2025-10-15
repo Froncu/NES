@@ -4,9 +4,15 @@
 namespace nes
 {
    #ifdef NDEBUG
-   bool constexpr DEBUG = false;
+   auto constexpr DEBUG{ false };
    #else
-   bool constexpr DEBUG = true;
+   auto constexpr DEBUG{ true };
+   #endif
+
+   #ifdef __MINGW32__
+   auto constexpr MINGW{ true };
+   #else
+   auto constexpr MINGW{ false };
    #endif
 }
 

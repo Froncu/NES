@@ -118,7 +118,7 @@ namespace nes
 
             ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
             {
-               ImGui::Text("Cycle: %u", processor.cycle());
+               ImGui::Text("Cycle: %llu", processor.cycle());
                ImGui::Text("PC: %04X", processor.program_counter());
                ImGui::Text("A: %02X", processor.accumulator());
                ImGui::Text("X: %02X", processor.x());

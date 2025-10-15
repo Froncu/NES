@@ -1,4 +1,5 @@
 #include "logger.hpp"
+#include "utility/constants.hpp"
 #include "utility/hash.hpp"
 
 namespace std
@@ -95,13 +96,22 @@ namespace nes
       std::ostringstream time_stream;
       time_stream << std::put_time(&local_time, "%H:%M:%S");
 
-      std::println(*output_stream,
-         "\033[{}m>> {}({})\n[{}]: {}\033[0m",
-         esc_sequence,
-         payload.location.file_name(),
-         payload.location.line(),
-         time_stream.str(),
-         payload.message);
+      if constexpr (MINGW)
+         *output_stream << std::format(
+            "\033[{}m>> {}({})\n[{}]: {}\033[0m\n",
+            esc_sequence,
+            payload.location.file_name(),
+            payload.location.line(),
+            time_stream.str(),
+            payload.message);
+      else
+         std::println(*output_stream,
+            "\033[{}m>> {}({})\n[{}]: {}\033[0m",
+            esc_sequence,
+            payload.location.file_name(),
+            payload.location.line(),
+            time_stream.str(),
+            payload.message);
    }
 
    void Logger::log_once(Payload const& payload)

@@ -26,13 +26,12 @@ int main(int, char**)
 
    memory[0xFFFD] = 0x06;
    memory[0xFFFC] = 0x00;
-   memory[0x0600] = 0x01;
-   memory[0x0601] = 0x55;
-   memory[0x0602] = 0x02;
-   memory[0x0055] = 0x10;
-   memory[0x0011] = 0xBB;
-   memory[0x0012] = 0xAA;
-   memory[0xAABB] = 0xFF;
+   memory[0x0600] = static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_INDIRECT_Y);
+   memory[0x0601] = 0xFF;
+   memory[0x0602] = static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_X_INDIRECT);
+   memory[0x0603] = 0x01;
+   memory[0x0604] = static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_ZERO_PAGE);
+   memory[0x0605] = 0xFF;
 
    double cycle_accumulator = 0.0;
    auto previous_time = std::chrono::high_resolution_clock::now();
