@@ -1,7 +1,7 @@
 #ifndef VISUALISER_HPP
 #define VISUALISER_HPP
 
-#include "hardware/CPU/CPU.hpp"
+#include "hardware/cpu/cpu.hpp"
 #include "pch.hpp"
 #include "utility/runtime_assert.hpp"
 
@@ -22,7 +22,7 @@ namespace nes
             SDL_Context& operator=(SDL_Context&&) = delete;
 
          private:
-            SDL_InitFlags const initialisation_flags_ = SDL_INIT_VIDEO;
+            SDL_InitFlags const initialisation_flags_{ SDL_INIT_VIDEO };
       };
 
       class ImGuiBackend final
@@ -37,7 +37,7 @@ namespace nes
             ImGuiBackend& operator=(ImGuiBackend const&) = delete;
             ImGuiBackend& operator=(ImGuiBackend&&) = delete;
 
-            UniquePointer<ImGuiContext> const context = { ImGui::CreateContext(), ImGui::DestroyContext };
+            UniquePointer<ImGuiContext> const context{ ImGui::CreateContext(), ImGui::DestroyContext };
       };
 
       public:
@@ -62,7 +62,7 @@ namespace nes
          {
             []
             {
-               SDL_Window* const window = SDL_CreateWindow("Emulator", 1280, 720, SDL_WINDOW_RESIZABLE);
+               SDL_Window* const window{ SDL_CreateWindow("Emulator", 1280, 720, SDL_WINDOW_RESIZABLE) };
                runtime_assert(window, std::format("failed to create window ({})", SDL_GetError()));
 
                return window;
@@ -74,7 +74,7 @@ namespace nes
          {
             [this]
             {
-               SDL_Renderer* const renderer = SDL_CreateRenderer(window_.get(), nullptr);
+               SDL_Renderer* const renderer{ SDL_CreateRenderer(window_.get(), nullptr) };
                runtime_assert(renderer, std::format("failed to create renderer ({})", SDL_GetError()));
 
                return renderer;
@@ -84,13 +84,13 @@ namespace nes
 
          ImGuiBackend const imgui_backend_{ *window_, *renderer_ };
 
-         ProgramCounter jump_address_ = 0;
-         int bytes_per_row_ = 16;
-         int visible_rows_ = 16;
+         ProgramCounter jump_address_{};
+         int bytes_per_row_{ 16 };
+         int visible_rows_{ 16 };
 
-         bool jump_requested_ = false;
-         bool run_ = false;
-         bool tick_ = false;
+         bool jump_requested_{};
+         bool run_{};
+         bool tick_{};
    };
 }
 

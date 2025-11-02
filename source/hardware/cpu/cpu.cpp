@@ -1,25 +1,17 @@
-#include "CPU.hpp"
+#include "cpu.hpp"
 #include "exceptions/unsupported_opcode.hpp"
 
 namespace nes
 {
    CPU::CPU(Memory& memory)
       : memory_{ memory }
-      , current_instruction_{ reset() }
    {
    }
 
    void CPU::tick()
    {
-      if (current_instruction_)
-      {
-         current_instruction_->resume();
-
-         if (current_instruction_->done())
-            current_instruction_.reset();
-      }
-      else
-         switch (auto const opcode = static_cast<Opcode>(memory_[program_counter_++]))
+      if (not current_instruction_)
+         switch (Opcode const opcode{ memory_[program_counter_++] })
          {
             case Opcode::BRK_IMPLIED:
                current_instruction_ = brk_implied();
@@ -43,6 +35,8 @@ namespace nes
                   static_cast<std::underlying_type_t<Opcode>>(opcode)
                };
          }
+      else if (current_instruction_->tick())
+         current_instruction_.reset();
 
       ++cycle_;
    }
@@ -133,10 +127,10 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::immediate(ReadOperation operation)
+   Instruction CPU::immediate(ReadOperation const operation)
    {
       // fetch value, increment PC
-      Data const value = memory_[program_counter_++];
+      auto const value{ memory_[program_counter_++] };
 
       operation(value);
       co_return;
@@ -145,16 +139,16 @@ namespace nes
    Instruction CPU::absolute(ReadOperation const operation)
    {
       // fetch low byte of address, increment PC
-      Data const low_byte_of_address = memory_[program_counter_++];
+      auto const low_byte_of_address{ memory_[program_counter_++] };
       co_await std::suspend_always{};
 
       // fetch high byte of address, increment PC
-      Data const high_byte_of_address = memory_[program_counter_++];
+      auto const high_byte_of_address{ memory_[program_counter_++] };
       co_await std::suspend_always{};
 
       // read from effective address
-      auto const effective_address = high_byte_of_address << 8 | low_byte_of_address;
-      Data const value = memory_[effective_address];
+      auto const effective_address{ high_byte_of_address << 8 | low_byte_of_address };
+      auto const value{ memory_[effective_address] };
 
       operation(value);
       co_return;
@@ -163,11 +157,11 @@ namespace nes
    Instruction CPU::zero_page(ReadOperation const operation)
    {
       // fetch address, increment PC
-      Data const address = memory_[program_counter_++];
+      auto const address{ memory_[program_counter_++] };
       co_await std::suspend_always{};
 
       // read from effective address
-      Data const value = memory_[address];
+      auto const value{ memory_[address] };
 
       operation(value);
       co_return;
@@ -176,15 +170,15 @@ namespace nes
    Instruction CPU::zero_page_indexed(ReadOperation const operation, Index const& index)
    {
       // fetch address, increment PC
-      Data const address = memory_[program_counter_++];
+      auto const address{ memory_[program_counter_++] };
       co_await std::suspend_always{};
 
       // read from address, add index register to it
-      Data const effective_address = memory_[address] + index;
+      auto const effective_address{ memory_[address] + index };
       co_await std::suspend_always{};
 
       // read from effective address
-      Data const value = memory_[effective_address];
+      auto const value{ memory_[effective_address] };
 
       operation(value);
       co_return;
@@ -193,18 +187,18 @@ namespace nes
    Instruction CPU::absolute_indexed(ReadOperation const operation, Index const& index)
    {
       // fetch low byte of address, increment PC
-      Data low_byte_of_address = memory_[program_counter_++];
+      auto low_byte_of_address{ memory_[program_counter_++] };
       co_await std::suspend_always{};
 
       // fetch high byte of address, add index register to low address byte, increment PC
-      Data const high_byte_of_address = memory_[program_counter_++];
-      bool const overflow = low_byte_of_address + index < low_byte_of_address;
+      auto const high_byte_of_address{ memory_[program_counter_++] };
+      bool const overflow{ low_byte_of_address + index < low_byte_of_address };
       low_byte_of_address += index;
       co_await std::suspend_always{};
 
       // read from effective address, fix the high byte of effective address
-      auto effective_address = high_byte_of_address << 8 | low_byte_of_address;
-      Data value = memory_[effective_address];
+      auto effective_address{ high_byte_of_address << 8 | low_byte_of_address };
+      auto value{ memory_[effective_address] };
       if (overflow)
       {
          ++effective_address;
@@ -221,24 +215,24 @@ namespace nes
    Instruction CPU::x_indirect(ReadOperation const operation)
    {
       // fetch pointer address, increment PC
-      Data const pointer_address = memory_[program_counter_++];
+      auto const pointer_address{ memory_[program_counter_++] };
       co_await std::suspend_always{};
 
       // read from the address, add X to it
-      Data const pointer = memory_[pointer_address] + x_;
+      auto const pointer{ memory_[pointer_address] + x_ };
       co_await std::suspend_always{};
 
       // fetch effective address low
-      Data const effective_address_low = memory_[pointer];
+      auto const effective_address_low{ memory_[pointer] };
       co_await std::suspend_always{};
 
       // fetch effective address high
-      Data const effective_address_high = memory_[pointer + 1];
+      auto const effective_address_high{ memory_[pointer + 1] };
       co_await std::suspend_always{};
 
       // read from effective address
-      auto const effective_address = effective_address_high << 8 | effective_address_low;
-      Data const value = memory_[effective_address];
+      auto const effective_address{ effective_address_high << 8 | effective_address_low };
+      auto const value{ memory_[effective_address] };
 
       operation(value);
       co_return;
@@ -247,22 +241,22 @@ namespace nes
    Instruction CPU::indirect_y(ReadOperation const operation)
    {
       // fetch pointer address, increment PC
-      Data const pointer_address = memory_[program_counter_++];
+      auto const pointer_address{ memory_[program_counter_++] };
       co_await std::suspend_always{};
 
       // fetch effective address low
-      Data effective_address_low = memory_[pointer_address];
+      auto effective_address_low{ memory_[pointer_address] };
       co_await std::suspend_always{};
 
       // fetch effective address high, add Y to low byte of effective address
-      Data const effective_address_high = memory_[pointer_address + 1];
-      bool const overflow = effective_address_low + y_ < effective_address_low;
+      auto const effective_address_high{ memory_[pointer_address + 1] };
+      bool const overflow{ effective_address_low + y_ < effective_address_low };
       effective_address_low += y_;
       co_await std::suspend_always{};
 
       // read from effective address, fix high byte of effective address
       auto effective_address = effective_address_high << 8 | effective_address_low;
-      Data value = memory_[effective_address];
+      auto value = memory_[effective_address];
       if (overflow)
       {
          ++effective_address;
@@ -302,10 +296,10 @@ namespace nes
 
    void CPU::change_processor_status_flag(ProcessorStatusFlag const flag, bool const set)
    {
-      if (auto const underlying_flag = static_cast<std::underlying_type_t<ProcessorStatusFlag>>(flag); set)
-         processor_status_ |= underlying_flag;
-      else
-         processor_status_ &= ~underlying_flag;
+      auto const underlying_flag{ static_cast<std::underlying_type_t<ProcessorStatusFlag>>(flag) };
+      set
+         ? processor_status_ |= underlying_flag
+         : processor_status_ &= ~underlying_flag;
    }
 
    void CPU::push(Data const value)

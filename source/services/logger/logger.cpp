@@ -6,15 +6,17 @@ namespace std
 {
    size_t hash<source_location>::operator()(source_location const& location) const noexcept
    {
-      size_t const hash_1 = nes::hash(location.file_name());
-      size_t const hash_2 = nes::hash(location.line());
-      size_t const hash_3 = nes::hash(location.column());
-      size_t const hash_4 = nes::hash(location.function_name());
+      size_t const hash_1{ nes::hash(location.file_name()) };
+      size_t const hash_2{ nes::hash(location.line()) };
+      size_t const hash_3{ nes::hash(location.column()) };
+      size_t const hash_4{ nes::hash(location.function_name()) };
 
-      size_t seed = 0;
-      auto const generate = [&seed](size_t const hash)
-      {
-         seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      size_t seed{};
+      auto const generate{
+         [&seed](size_t const hash)
+         {
+            seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+         }
       };
 
       generate(hash_1);
@@ -56,7 +58,7 @@ namespace nes
 
    void Logger::log(Payload const& payload)
    {
-      std::ostream* output_stream;
+      std::ostream* output_stream{};
       switch (payload.type)
       {
          case Type::INFO:
@@ -90,7 +92,7 @@ namespace nes
             break;
       }
 
-      std::time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+      std::time_t const now{ std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) };
       std::tm local_time;
       localtime_s(&local_time, &now);
       std::ostringstream time_stream;

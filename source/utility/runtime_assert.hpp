@@ -8,7 +8,8 @@
 namespace nes
 {
    template <typename Message>
-   constexpr void runtime_assert(bool const condition, Message&& message, std::source_location location = std::source_location::current())
+   constexpr void runtime_assert([[maybe_unused]] bool const condition, [[maybe_unused]] Message&& message,
+      [[maybe_unused]] std::source_location location = std::source_location::current())
    {
       if constexpr (DEBUG)
       {

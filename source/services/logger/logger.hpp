@@ -58,11 +58,11 @@ namespace nes
             {
                std::lock_guard const lock{ mutex_ };
                log_queue_.push({
-                  .once = once,
+                  .once{ once },
                   .payload{
-                     .type = Type::INFO,
-                     .location = std::move(location),
-                     .message = std::format("{}", message)
+                     .type{ Type::INFO },
+                     .location{ std::move(location) },
+                     .message{ std::format("{}", message) }
                   }
                });
             }
@@ -77,11 +77,11 @@ namespace nes
             {
                std::lock_guard const lock{ mutex_ };
                log_queue_.push({
-                  .once = once,
+                  .once{ once },
                   .payload{
-                     .type = Type::WARNING,
-                     .location = std::move(location),
-                     .message = std::format("{}", message)
+                     .type{ Type::WARNING },
+                     .location{ std::move(location) },
+                     .message{ std::format("{}", message) }
                   }
                });
             }
@@ -95,11 +95,11 @@ namespace nes
             {
                std::lock_guard const lock{ mutex_ };
                log_queue_.push({
-                  .once = once,
+                  .once{ once },
                   .payload{
                      .type = Type::ERROR,
-                     .location = std::move(location),
-                     .message = std::format("{}", message)
+                     .location{ std::move(location) },
+                     .message{ std::format("{}", message) }
                   }
                });
             }

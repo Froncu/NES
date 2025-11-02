@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 4.1)
 project(NES)
 
-file(GLOB_RECURSE SOURCES source/*.cpp external/*.cpp)
+file(GLOB_RECURSE SOURCES source/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME}
-   PRIVATE source
-   PRIVATE external)
+   PRIVATE source)
 
 target_precompile_headers(${PROJECT_NAME}
    PRIVATE source/pch.hpp)

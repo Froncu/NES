@@ -18,13 +18,13 @@ namespace nes
             requires std::constructible_from<Provider, Arguments...>
          static Service& provide(Arguments&&... arguments)
          {
-            UniquePointer<void> new_provider = { new Provider{ std::forward<Arguments>(arguments)... }, void_deleter<Provider> };
+            UniquePointer<void> new_provider{ new Provider{ std::forward<Arguments>(arguments)... }, void_deleter<Provider> };
 
-            auto&& [service_index, did_insert] = service_indices_.emplace(type_index<Service>(), services_.size());
+            auto&& [service_index, did_insert]{ service_indices_.emplace(type_index<Service>(), services_.size()) };
             if (did_insert)
                return *static_cast<Service*>(services_.emplace_back(std::move(new_provider)).get());
 
-            UniquePointer<void>& current_provider = services_[service_index->second];
+            UniquePointer<void>& current_provider{ services_[service_index->second] };
 
             if constexpr (std::movable<Service>)
                *static_cast<Service*>(new_provider.get()) = std::move(*static_cast<Service*>(current_provider.get()));
@@ -44,7 +44,7 @@ namespace nes
          template <typename Service>
          [[nodiscard]] static Service* get()
          {
-            auto const service_index = service_indices_.find(type_index<Service>());
+            auto const service_index{ service_indices_.find(type_index<Service>()) };
             if (service_index == service_indices_.end())
                return nullptr;
 
