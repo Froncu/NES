@@ -87,7 +87,7 @@ namespace nes
 
                            for (int column_index{ base_column_index }; column_index < max_column_index; ++column_index)
                            {
-                              Data const byte{ memory[column_index] };
+                              Data const byte{ memory.read(static_cast<Address>(column_index)) };
                               if (not byte)
                                  ImGui::PushStyleColor(ImGuiCol_Text, { 0.5f, 0.5f, 0.5f, 1.0f });
 

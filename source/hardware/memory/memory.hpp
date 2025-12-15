@@ -6,7 +6,25 @@
 
 namespace nes
 {
-   using Memory = std::array<Data, std::numeric_limits<ProgramCounter>::max() + 1>;
+   class Memory final
+   {
+      public:
+         Memory() = default;
+         Memory(Memory const&) = delete;
+         Memory(Memory&&) = delete;
+
+         ~Memory() = default;
+
+         Memory& operator=(Memory const&) = delete;
+         Memory& operator=(Memory&&) = delete;
+
+         void write(Address address, Data data);
+         [[nodiscard]] Data read(Address address) const;
+         [[nodiscard]] std::size_t size() const;
+
+      private:
+         std::array<Data, std::numeric_limits<ProgramCounter>::max() + 1> data_{};
+   };
 }
 
 #endif

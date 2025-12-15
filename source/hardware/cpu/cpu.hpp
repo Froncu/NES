@@ -21,8 +21,6 @@ namespace nes
             BRK_IMPLIED = 0x00,
             ORA_X_INDIRECT = 0x01,
             ORA_INDIRECT_Y = 0x11,
-            ORA_ZERO_PAGE = 0x05,
-            LDA_IMMEDIATE = 0x05,
          };
 
          enum class ProcessorStatusFlag : ProcessorStatus
@@ -88,6 +86,8 @@ namespace nes
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
          void push(Data value);
          [[nodiscard]] Data pop();
+
+         [[nodiscard]] static Address assemble_address(Data low_byte, Data high_byte);
 
          Memory& memory_;
 

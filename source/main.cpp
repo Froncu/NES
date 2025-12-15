@@ -24,14 +24,14 @@ int main(int, char**)
    nes::Memory memory{};
    nes::CPU processor{ memory };
 
-   memory[0xFFFD] = 0x06;
-   memory[0xFFFC] = 0x00;
-   memory[0x0600] = static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_INDIRECT_Y);
-   memory[0x0601] = 0xFF;
-   memory[0x0602] = static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_X_INDIRECT);
-   memory[0x0603] = 0x01;
-   memory[0x0604] = static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_ZERO_PAGE);
-   memory[0x0605] = 0xFF;
+   memory.write(0xFFFD, 0x06);
+   memory.write(0xFFFC, 0x00);
+   memory.write(0x0600, static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_INDIRECT_Y));
+   memory.write(0x0601, 0xFF);
+   memory.write(0x0602, static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_X_INDIRECT));
+   memory.write(0x0603, 0x01);
+   memory.write(0x0604, static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_ZERO_PAGE));
+   memory.write(0x0605, 0xFF);
 
    double cycle_accumulator{};
    auto previous_time{ std::chrono::high_resolution_clock::now() };
