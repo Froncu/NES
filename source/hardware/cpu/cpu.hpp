@@ -14,13 +14,27 @@ namespace nes
       using WriteOperation = void(CPU::*)(Address);
 
       public:
-         static auto constexpr FREQUENCY = 1'789'773;
-
          enum class Opcode : Data
          {
-            BRK_IMPLIED = 0x00,
-            ORA_X_INDIRECT = 0x01,
-            ORA_INDIRECT_Y = 0x11,
+            BRK_IMPLIED       = 0x00,
+            ORA_X_INDIRECT    = 0x01,
+            JAM_02            = 0x02,
+            SLO_X_INDIRECT    = 0x03,
+            NOP_ZERO_PAGE     = 0x04,
+            ORA_ZERO_PAGE     = 0x05,
+            ASL_ZERO_PAGE     = 0x06,
+            SLO_ZERO_PAGE     = 0x07,
+            PHP_IMPLIED       = 0x08,
+            ORA_IMMEDIATE     = 0x09,
+            ASL_ACCUMULATOR   = 0x0A,
+            ANC_IMMEDIATE     = 0x0B,
+            NOP_ABSOLUTE      = 0x0C,
+            ORA_ABSOLUTE      = 0x0D,
+            ASL_ABSOLUTE      = 0x0E,
+            SLO_ABSOLUTE      = 0x0F,
+
+            BPL_RELATIVE      = 0x10,
+            ORA_INDIRECT_Y    = 0x11,
          };
 
          enum class ProcessorStatusFlag : ProcessorStatus
