@@ -7,9 +7,9 @@
 #include "services/logger/logger.hpp"
 #include "services/visualiser/visualiser.hpp"
 
-void tick(nes::CPU& processor) try
+void try_invoke(nes::CPU& processor, void(nes::CPU::* const function)()) try
 {
-   processor.tick();
+   std::invoke(function, processor);
 }
 catch (nes::EmulationException const& exception)
 {
@@ -19,7 +19,7 @@ catch (nes::EmulationException const& exception)
 void tick_repeatedly(std::stop_token const& stop_token, nes::CPU& processor)
 {
    while (not stop_token.stop_requested())
-      tick(processor);
+      try_invoke(processor, &nes::CPU::tick);
 }
 
 int main(int, char**)
@@ -33,12 +33,6 @@ int main(int, char**)
    std::jthread emulation_thread{};
    while (visualiser.update(memory, processor))
    {
-      if (visualiser.tick_once())
-      {
-         tick(processor);
-         continue;
-      }
-
       if (visualiser.tick_repeatedly())
       {
          if (not emulation_thread.joinable())
@@ -48,6 +42,19 @@ int main(int, char**)
       {
          emulation_thread.request_stop();
          emulation_thread.join();
+      }
+      else if (visualiser.tick_once())
+         try_invoke(processor, &nes::CPU::tick);
+      else if (visualiser.step())
+         try_invoke(processor, &nes::CPU::step);
+      else if (visualiser.reset())
+         processor.reset();
+
+      if (visualiser.load_program_requested())
+      {
+         std::ifstream in{ visualiser.program_path().data(), std::ios::binary };
+         in.read(reinterpret_cast<char*>(&memory[visualiser.program_load_address()]),
+            memory.size() - visualiser.program_load_address());
       }
    }
 

@@ -1,5 +1,10 @@
 #include "memory.hpp"
 
+nes::Data& nes::Memory::operator[](Address const address)
+{
+   return data_[address];
+}
+
 void nes::Memory::write(Address const address, Data const data)
 {
    data_[address] = data;

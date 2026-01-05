@@ -45,17 +45,20 @@ namespace nes
          CPU& operator=(CPU&&) = delete;
 
          void tick();
+         void step();
+         void reset();
 
          [[nodiscard]] Cycle cycle() const;
-         [[nodiscard]] ProgramCounter program_counter() const;
          [[nodiscard]] Accumulator accumulator() const;
          [[nodiscard]] Index x() const;
          [[nodiscard]] Index y() const;
          [[nodiscard]] StackPointer stack_pointer() const;
          [[nodiscard]] ProcessorStatus processor_status() const;
 
+         ProgramCounter program_counter{};
+
       private:
-         [[nodiscard]] Instruction reset();
+         [[nodiscard]] Instruction rst_implied();
          [[nodiscard]] Instruction brk_implied();
 
          [[nodiscard]] Instruction immediate(ReadOperation operation);
@@ -92,14 +95,13 @@ namespace nes
          Memory& memory_;
 
          Cycle cycle_{};
-         ProgramCounter program_counter_{};
          Accumulator accumulator_{};
          Index x_{};
          Index y_{};
          StackPointer stack_pointer_{ 0xFF };
          ProcessorStatus processor_status_{};
 
-         std::optional<Instruction> current_instruction_{ reset() };
+         std::optional<Instruction> current_instruction_{ rst_implied() };
    };
 }
 

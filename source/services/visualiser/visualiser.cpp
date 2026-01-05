@@ -34,7 +34,17 @@ namespace nes
       ImGui_ImplSDL3_Shutdown();
    }
 
-   bool Visualiser::update(Memory const& memory, CPU const& processor)
+   Visualiser::Visualiser()
+   {
+      NFD::Init();
+   }
+
+   Visualiser::~Visualiser()
+   {
+      NFD::Quit();
+   }
+
+   bool Visualiser::update(Memory const& memory, CPU& processor)
    {
       SDL_Event event;
       while (SDL_PollEvent(&event))
@@ -69,7 +79,7 @@ namespace nes
                   {
                      if (jump_requested_)
                      {
-                        jump_address_ = std::clamp(jump_address_, {}, static_cast<ProgramCounter>(memory.size() - 1));
+                        jump_address_ = std::clamp(jump_address_, {}, static_cast<Address>(memory.size() - 1));
                         float const target_row{ jump_address_ / bytes_per_row_ - visible_rows_ / 2.0f + 0.5f };
                         ImGui::SetScrollY(target_row * item_height);
                      }
@@ -120,7 +130,11 @@ namespace nes
             ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
             {
                ImGui::Text("Cycle: %llu", processor.cycle());
-               ImGui::Text("PC: %04X", processor.program_counter());
+               ImGui::Text("Program counter:");
+               ImGui::SameLine();
+               ImGui::SetNextItemWidth(50.0f);
+               ImGui::InputScalar("##hidden", ImGuiDataType_U16, &processor.program_counter,
+                  nullptr, nullptr, "%04X", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
                ImGui::Text("A: %02X", processor.accumulator());
                ImGui::Text("X: %02X", processor.x());
                ImGui::Text("Y: %02X", processor.y());
@@ -148,9 +162,47 @@ namespace nes
                {
                   ImGui::SameLine();
                   tick_once_ = ImGui::Button("Tick once");
+                  step_ = ImGui::Button("Step");
                }
                else
-                  tick_once_ = false;
+                  tick_once_ = step_ = false;
+
+               reset_ = ImGui::Button("Reset");
+            }
+            ImGui::End();
+
+            ImGui::Begin("Program loader", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
+            {
+               if (ImGui::Button("Select program"))
+               {
+                  NFD::UniquePath program_path;
+                  std::array constexpr filters{ nfdu8filteritem_t{ "Binaries", "bin" } };
+                  switch (NFD::OpenDialog(program_path, filters.data(), static_cast<nfdfiltersize_t>(filters.size())))
+                  {
+                     case NFD_OKAY:
+                        program_path_ = program_path.get();
+                        break;
+
+                     case NFD_CANCEL:
+                        Locator::get<Logger>()->warning("file selection cancelled");
+                        break;
+
+                     default:
+                        Locator::get<Logger>()->error(std::format("file selection error: {}", NFD::GetError()));
+                        break;
+                  }
+               }
+               if (exists(program_path_))
+               {
+                  ImGui::SameLine();
+                  ImGui::Text(program_path_.filename().string().c_str());
+               }
+
+               ImGui::InputScalar("Load address", ImGuiDataType_U16, &program_load_address_, nullptr, nullptr,
+                  "%04X", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+
+               if (exists(program_path_))
+                  load_program_requested_ = ImGui::Button("Load");
             }
             ImGui::End();
          }
@@ -171,5 +223,30 @@ namespace nes
    bool Visualiser::tick_once() const
    {
       return tick_once_;
+   }
+
+   bool Visualiser::step() const
+   {
+      return step_;
+   }
+
+   bool Visualiser::reset() const
+   {
+      return reset_;
+   }
+
+   std::wstring_view Visualiser::program_path() const
+   {
+      return program_path_.c_str();
+   }
+
+   Address Visualiser::program_load_address() const
+   {
+      return program_load_address_;
+   }
+
+   bool Visualiser::load_program_requested() const
+   {
+      return load_program_requested_;
    }
 }

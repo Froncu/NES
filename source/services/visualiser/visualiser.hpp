@@ -41,19 +41,25 @@ namespace nes
       };
 
       public:
-         Visualiser() = default;
+         Visualiser();
          Visualiser(Visualiser const&) = delete;
          Visualiser(Visualiser&&) = delete;
 
-         ~Visualiser() = default;
+         ~Visualiser();
 
          Visualiser& operator=(Visualiser const&) = delete;
          Visualiser& operator=(Visualiser&&) = delete;
 
-         [[nodiscard]] bool update(Memory const& memory, CPU const& processor);
+         [[nodiscard]] bool update(Memory const& memory, CPU& processor);
 
          [[nodiscard]] bool tick_repeatedly() const;
          [[nodiscard]] bool tick_once() const;
+         [[nodiscard]] bool step() const;
+         [[nodiscard]] bool reset() const;
+
+         [[nodiscard]] std::wstring_view program_path() const;
+         [[nodiscard]] Address program_load_address() const;
+         [[nodiscard]] bool load_program_requested() const;
 
       private:
          SDL_Context const context_ = {};
@@ -84,13 +90,19 @@ namespace nes
 
          ImGuiBackend const imgui_backend_{ *window_, *renderer_ };
 
-         ProgramCounter jump_address_{};
+         Address jump_address_{};
          int bytes_per_row_{ 16 };
          int visible_rows_{ 16 };
 
          bool jump_requested_{};
          bool tick_repeatedly_{};
          bool tick_once_{};
+         bool step_{};
+         bool reset_{};
+
+         std::filesystem::path program_path_{};
+         Address program_load_address_{};
+         bool load_program_requested_{};
    };
 }
 

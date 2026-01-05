@@ -20,7 +20,9 @@ target_compile_options(${PROJECT_NAME}
 
 find_package(SDL3 CONFIG REQUIRED COMPONENTS SDL3-static)
 find_package(imgui CONFIG REQUIRED COMPONENTS imgui-static)
+find_package(nfd CONFIG REQUIRED COMPONENTS nfd-static)
 
 target_link_libraries(${PROJECT_NAME}
    PRIVATE SDL3::SDL3-static
-   PRIVATE imgui::imgui)
+   PRIVATE imgui::imgui
+   PRIVATE nfd::nfd)

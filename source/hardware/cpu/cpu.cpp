@@ -11,7 +11,7 @@ namespace nes
    void CPU::tick()
    {
       if (not current_instruction_)
-         switch (Opcode const opcode{ memory_.read(program_counter_++) })
+         switch (Opcode const opcode{ memory_.read(program_counter++) })
          {
             case Opcode::BRK_IMPLIED:
                current_instruction_ = brk_implied();
@@ -27,7 +27,7 @@ namespace nes
 
             default:
                throw UnsupportedOpcode{
-                  static_cast<decltype(program_counter_)>(program_counter_ - 1),
+                  static_cast<decltype(program_counter)>(program_counter - 1),
                   static_cast<std::underlying_type_t<Opcode>>(opcode)
                };
          }
@@ -37,14 +37,22 @@ namespace nes
       ++cycle_;
    }
 
+   void CPU::step()
+   {
+      do
+         tick();
+      while (current_instruction_);
+   }
+
+   void CPU::reset()
+   {
+      cycle_ = 0;
+      current_instruction_ = rst_implied();
+   }
+
    Cycle CPU::cycle() const
    {
       return cycle_;
-   }
-
-   ProgramCounter CPU::program_counter() const
-   {
-      return program_counter_;
    }
 
    Accumulator CPU::accumulator() const
@@ -73,7 +81,7 @@ namespace nes
    }
 
    // TODO: find what exactly happens here
-   Instruction CPU::reset()
+   Instruction CPU::rst_implied()
    {
       co_await std::suspend_always{};
 
@@ -88,26 +96,26 @@ namespace nes
       --stack_pointer_;
       co_await std::suspend_always{};
 
-      program_counter_ = memory_.read(0xFFFC);
+      program_counter = memory_.read(0xFFFC);
       co_await std::suspend_always{};
 
-      program_counter_ |= memory_.read(0xFFFD) << 8;
+      program_counter |= memory_.read(0xFFFD) << 8;
       co_return;
    }
 
    Instruction CPU::brk_implied()
    {
       // read next instruction byte (and throw it away), increment PC
-      std::ignore = memory_.read(program_counter_++);
+      std::ignore = memory_.read(program_counter++);
       co_await std::suspend_always{};
 
       // push PCH on stack (with B flag set), decrement S
       change_processor_status_flag(ProcessorStatusFlag::B, true);
-      push(program_counter_ >> 8 & 0x00FF);
+      push(program_counter >> 8 & 0x00FF);
       co_await std::suspend_always{};
 
       // push PCL on stack, decrement S
-      push(program_counter_ & 0x00FF);
+      push(program_counter & 0x00FF);
       co_await std::suspend_always{};
 
       // push P on stack, decrement S
@@ -115,18 +123,18 @@ namespace nes
       co_await std::suspend_always{};
 
       // fetch PCL
-      program_counter_ = memory_.read(0xFFFE);
+      program_counter = memory_.read(0xFFFE);
       co_await std::suspend_always{};
 
       // fetch PCH
-      program_counter_ |= memory_.read(0xFFFF) << 8;
+      program_counter |= memory_.read(0xFFFF) << 8;
       co_return;
    }
 
    Instruction CPU::immediate(ReadOperation const operation)
    {
       // fetch value, increment PC
-      Data const value{ memory_.read(program_counter_++) };
+      Data const value{ memory_.read(program_counter++) };
 
       std::invoke(operation, this, value);
       co_return;
@@ -135,11 +143,11 @@ namespace nes
    Instruction CPU::absolute(ReadOperation const operation)
    {
       // fetch low byte of address, increment PC
-      Data const low_byte_of_address{ memory_.read(program_counter_++) };
+      Data const low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, increment PC
-      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      Data const high_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from effective address
@@ -153,7 +161,7 @@ namespace nes
    Instruction CPU::zero_page(ReadOperation const operation)
    {
       // fetch address, increment PC
-      Address const address{ memory_.read(program_counter_++) };
+      Address const address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from effective address
@@ -166,7 +174,7 @@ namespace nes
    Instruction CPU::zero_page_indexed(ReadOperation const operation, Index const index)
    {
       // fetch address, increment PC
-      Address const address{ memory_.read(program_counter_++) };
+      Address const address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from address, add index register to it
@@ -183,11 +191,11 @@ namespace nes
    Instruction CPU::absolute_indexed(ReadOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
-      Data low_byte_of_address{ memory_.read(program_counter_++) };
+      Data low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, add index register to low address byte, increment PC
-      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      Data const high_byte_of_address{ memory_.read(program_counter++) };
       bool const overflow{ low_byte_of_address + index < low_byte_of_address };
       low_byte_of_address += index;
       co_await std::suspend_always{};
@@ -211,7 +219,7 @@ namespace nes
    Instruction CPU::x_indirect(ReadOperation const operation)
    {
       // fetch pointer address, increment PC
-      Address const pointer_address{ memory_.read(program_counter_++) };
+      Address const pointer_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from the address, add X to it
@@ -237,7 +245,7 @@ namespace nes
    Instruction CPU::indirect_y(ReadOperation const operation)
    {
       // fetch pointer address, increment PC
-      Address const pointer_address{ memory_.read(program_counter_++) };
+      Address const pointer_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch effective address low
@@ -269,11 +277,11 @@ namespace nes
    Instruction CPU::absolute(ModifyOperation const operation)
    {
       // fetch low byte of address, increment PC
-      Data const low_byte_of_address{ memory_.read(program_counter_++) };
+      Data const low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, increment PC
-      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      Data const high_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from effective address
@@ -294,7 +302,7 @@ namespace nes
    Instruction CPU::zero_page(ModifyOperation const operation)
    {
       // fetch address, increment PC
-      Address const address{ memory_.read(program_counter_++) };
+      Address const address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from effective address
@@ -314,7 +322,7 @@ namespace nes
    Instruction CPU::zero_page_indexed(ModifyOperation const operation, Index const index)
    {
       // fetch address, increment PC
-      Address const address{ memory_.read(program_counter_++) };
+      Address const address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from address, add index register to it
@@ -338,11 +346,11 @@ namespace nes
    Instruction CPU::absolute_indexed(ModifyOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
-      Data low_byte_of_address{ memory_.read(program_counter_++) };
+      Data low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, add index register to low address byte, increment PC
-      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      Data const high_byte_of_address{ memory_.read(program_counter++) };
       bool const overflow{ low_byte_of_address + index < low_byte_of_address };
       low_byte_of_address += index;
       co_await std::suspend_always{};
@@ -371,7 +379,7 @@ namespace nes
    Instruction CPU::x_indirect(ModifyOperation const operation)
    {
       // fetch pointer address, increment PC
-      Address const pointer_address{ memory_.read(program_counter_++) };
+      Address const pointer_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from the address, add X to it
@@ -404,7 +412,7 @@ namespace nes
    Instruction CPU::indirect_y(ModifyOperation const operation)
    {
       // fetch pointer address, increment PC
-      Address const pointer_address{ memory_.read(program_counter_++) };
+      Address const pointer_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch effective address low
@@ -442,11 +450,11 @@ namespace nes
    Instruction CPU::absolute(WriteOperation const operation)
    {
       // fetch low byte of address, increment PC
-      Data const low_byte_of_address{ memory_.read(program_counter_++) };
+      Data const low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, increment PC
-      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      Data const high_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // write register to effective address
@@ -458,7 +466,7 @@ namespace nes
    Instruction CPU::zero_page(WriteOperation const operation)
    {
       // fetch address, increment PC
-      Address const address{ memory_.read(program_counter_++) };
+      Address const address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // write register to effective address
@@ -469,7 +477,7 @@ namespace nes
    Instruction CPU::zero_page_indexed(WriteOperation const operation, Index const index)
    {
       // fetch address, increment PC
-      Address const address{ memory_.read(program_counter_++) };
+      Address const address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from address, add index register to it
@@ -484,11 +492,11 @@ namespace nes
    Instruction CPU::absolute_indexed(WriteOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
-      Data low_byte_of_address{ memory_.read(program_counter_++) };
+      Data low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, add index register to low address byte, increment PC
-      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      Data const high_byte_of_address{ memory_.read(program_counter++) };
       bool const overflow{ low_byte_of_address + index < low_byte_of_address };
       low_byte_of_address += index;
       co_await std::suspend_always{};
@@ -508,7 +516,7 @@ namespace nes
    Instruction CPU::x_indirect(WriteOperation const operation)
    {
       // fetch pointer address, increment PC
-      Address const pointer_address{ memory_.read(program_counter_++) };
+      Address const pointer_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // read from the address, add X to it
@@ -532,7 +540,7 @@ namespace nes
    Instruction CPU::indirect_y(WriteOperation const operation)
    {
       // fetch pointer address, increment PC
-      Address const pointer_address{ memory_.read(program_counter_++) };
+      Address const pointer_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch effective address low

@@ -17,6 +17,7 @@ namespace nes
 
          Memory& operator=(Memory const&) = delete;
          Memory& operator=(Memory&&) = delete;
+         [[nodiscard]] Data& operator[](Address address);
 
          void write(Address address, Data data);
          [[nodiscard]] Data read(Address address) const;
