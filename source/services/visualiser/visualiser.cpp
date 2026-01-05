@@ -144,13 +144,13 @@ namespace nes
                   processor_status & cast(CPU::ProcessorStatusFlag::Z) ? 'Z' : '-',
                   processor_status & cast(CPU::ProcessorStatusFlag::C) ? 'C' : '-').c_str());
 
-               if (ImGui::Checkbox("Run", &run_); not run_)
+               if (ImGui::Checkbox("Tick repeatedly", &tick_repeatedly_); not tick_repeatedly_)
                {
                   ImGui::SameLine();
-                  tick_ = ImGui::Button("Tick");
+                  tick_once_ = ImGui::Button("Tick once");
                }
                else
-                  tick_ = false;
+                  tick_once_ = false;
             }
             ImGui::End();
          }
@@ -163,13 +163,13 @@ namespace nes
       return true;
    }
 
-   bool Visualiser::run() const
+   bool Visualiser::tick_repeatedly() const
    {
-      return run_;
+      return tick_repeatedly_;
    }
 
-   bool Visualiser::tick() const
+   bool Visualiser::tick_once() const
    {
-      return tick_;
+      return tick_once_;
    }
 }

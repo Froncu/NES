@@ -52,8 +52,8 @@ namespace nes
 
          [[nodiscard]] bool update(Memory const& memory, CPU const& processor);
 
-         [[nodiscard]] bool run() const;
-         [[nodiscard]] bool tick() const;
+         [[nodiscard]] bool tick_repeatedly() const;
+         [[nodiscard]] bool tick_once() const;
 
       private:
          SDL_Context const context_ = {};
@@ -89,8 +89,8 @@ namespace nes
          int visible_rows_{ 16 };
 
          bool jump_requested_{};
-         bool run_{};
-         bool tick_{};
+         bool tick_repeatedly_{};
+         bool tick_once_{};
    };
 }
 

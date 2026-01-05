@@ -16,46 +16,39 @@ catch (nes::EmulationException const& exception)
    nes::Locator::get<nes::Logger>()->error(exception.what(), false, exception.location());
 }
 
+void tick_repeatedly(std::stop_token const& stop_token, nes::CPU& processor)
+{
+   while (not stop_token.stop_requested())
+      tick(processor);
+}
+
 int main(int, char**)
 {
-   auto& logger = nes::Locator::provide<nes::Logger>();
+   nes::Locator::provide<nes::Logger>();
    auto& visualiser = nes::Locator::provide<nes::Visualiser>();
 
    nes::Memory memory{};
    nes::CPU processor{ memory };
 
-   memory.write(0xFFFD, 0x06);
-   memory.write(0xFFFC, 0x00);
-   memory.write(0x0600, static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_INDIRECT_Y));
-   memory.write(0x0601, 0xFF);
-   memory.write(0x0602, static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_X_INDIRECT));
-   memory.write(0x0603, 0x01);
-
-   double cycle_accumulator{};
-   auto previous_time{ std::chrono::high_resolution_clock::now() };
+   std::jthread emulation_thread{};
    while (visualiser.update(memory, processor))
    {
-      auto const current_time{ std::chrono::high_resolution_clock::now() };
-      double const frame_time{ std::chrono::duration<double>(current_time - previous_time).count() };
-      previous_time = current_time;
-
-      if (visualiser.run())
+      if (visualiser.tick_once())
       {
-         if (auto constexpr MAX_CYCLES_PER_FRAME{ 1'000'000 };
-            (cycle_accumulator += nes::CPU::FREQUENCY * frame_time) > MAX_CYCLES_PER_FRAME)
-         {
-            auto const discarded_cycles{ cycle_accumulator - MAX_CYCLES_PER_FRAME };
-            logger.warning(std::format("exceeded max cycles per frame by {:5.2f}%; discarding {:.0f} cycles",
-               discarded_cycles / MAX_CYCLES_PER_FRAME * 100, discarded_cycles));
-
-            cycle_accumulator = MAX_CYCLES_PER_FRAME;
-         }
-
-         while (cycle_accumulator-- >= 1)
-            tick(processor);
-      }
-      else if (visualiser.tick())
          tick(processor);
+         continue;
+      }
+
+      if (visualiser.tick_repeatedly())
+      {
+         if (not emulation_thread.joinable())
+            emulation_thread = std::jthread{ tick_repeatedly, std::ref(processor) };
+      }
+      else if (emulation_thread.joinable())
+      {
+         emulation_thread.request_stop();
+         emulation_thread.join();
+      }
    }
 
    nes::Locator::remove_providers();
