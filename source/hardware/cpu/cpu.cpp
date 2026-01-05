@@ -18,11 +18,11 @@ namespace nes
                break;
 
             case Opcode::ORA_X_INDIRECT:
-               current_instruction_ = x_indirect(std::bind(&CPU::ora, this, std::placeholders::_1));
+               current_instruction_ = x_indirect(&CPU::ora);
                break;
 
             case Opcode::ORA_INDIRECT_Y:
-               current_instruction_ = indirect_y(std::bind(&CPU::ora, this, std::placeholders::_1));
+               current_instruction_ = indirect_y(&CPU::ora);
                break;
 
             default:
@@ -128,7 +128,7 @@ namespace nes
       // fetch value, increment PC
       Data const value{ memory_.read(program_counter_++) };
 
-      operation(value);
+      std::invoke(operation, this, value);
       co_return;
    }
 
@@ -146,7 +146,7 @@ namespace nes
       Address const effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
       Data const value{ memory_.read(effective_address) };
 
-      operation(value);
+      std::invoke(operation, this, value);
       co_return;
    }
 
@@ -159,11 +159,11 @@ namespace nes
       // read from effective address
       Data const value{ memory_.read(address) };
 
-      operation(value);
+      std::invoke(operation, this, value);
       co_return;
    }
 
-   Instruction CPU::zero_page_indexed(ReadOperation const operation, Index const& index)
+   Instruction CPU::zero_page_indexed(ReadOperation const operation, Index const index)
    {
       // fetch address, increment PC
       Address const address{ memory_.read(program_counter_++) };
@@ -176,11 +176,11 @@ namespace nes
       // read from effective address
       Data const value{ memory_.read(effective_address) };
 
-      operation(value);
+      std::invoke(operation, this, value);
       co_return;
    }
 
-   Instruction CPU::absolute_indexed(ReadOperation const operation, Index const& index)
+   Instruction CPU::absolute_indexed(ReadOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
       Data low_byte_of_address{ memory_.read(program_counter_++) };
@@ -204,7 +204,7 @@ namespace nes
          value = memory_.read(effective_address);
       }
 
-      operation(value);
+      std::invoke(operation, this, value);
       co_return;
    }
 
@@ -230,7 +230,7 @@ namespace nes
       Address const effective_address{ assemble_address(effective_address_low, effective_address_high) };
       auto const value{ memory_.read(effective_address) };
 
-      operation(value);
+      std::invoke(operation, this, value);
       co_return;
    }
 
@@ -262,7 +262,298 @@ namespace nes
          value = memory_.read(effective_address);
       }
 
-      operation(value);
+      std::invoke(operation, this, value);
+      co_return;
+   }
+
+   Instruction CPU::absolute(ModifyOperation const operation)
+   {
+      // fetch low byte of address, increment PC
+      Data const low_byte_of_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // fetch high byte of address, increment PC
+      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // read from effective address
+      Address const effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
+      Data value{ memory_.read(effective_address) };
+      co_await std::suspend_always{};
+
+      // write the value back to effective address, and do the operation on it
+      memory_.write(effective_address, value);
+      value = std::invoke(operation, this, value);
+      co_await std::suspend_always{};
+
+      // write the new value to effective address
+      memory_.write(effective_address, value);
+      co_return;
+   }
+
+   Instruction CPU::zero_page(ModifyOperation const operation)
+   {
+      // fetch address, increment PC
+      Address const address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // read from effective address
+      Data value{ memory_.read(address) };
+      co_await std::suspend_always{};
+
+      // write the value back to effective address, and do the operation on it
+      memory_.write(address, value);
+      value = std::invoke(operation, this, value);
+      co_await std::suspend_always{};
+
+      // write the new value to effective address
+      memory_.write(address, value);
+      co_return;
+   }
+
+   Instruction CPU::zero_page_indexed(ModifyOperation const operation, Index const index)
+   {
+      // fetch address, increment PC
+      Address const address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // read from address, add index register to it
+      auto const effective_address{ static_cast<Address>(memory_.read(address) + index) };
+      co_await std::suspend_always{};
+
+      // read from effective address
+      Data value{ memory_.read(effective_address) };
+      co_await std::suspend_always{};
+
+      // write the value back to effective address, and do the operation on it
+      memory_.write(address, value);
+      value = std::invoke(operation, this, value);
+      co_await std::suspend_always{};
+
+      // write the new value to effective address
+      memory_.write(address, value);
+      co_return;
+   }
+
+   Instruction CPU::absolute_indexed(ModifyOperation const operation, Index const index)
+   {
+      // fetch low byte of address, increment PC
+      Data low_byte_of_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // fetch high byte of address, add index register to low address byte, increment PC
+      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      bool const overflow{ low_byte_of_address + index < low_byte_of_address };
+      low_byte_of_address += index;
+      co_await std::suspend_always{};
+
+      // read from effective address, fix the high byte of effective address
+      Address effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
+      std::ignore = memory_.read(effective_address);
+      if (overflow)
+         effective_address += 0x0100;
+      co_await std::suspend_always{};
+
+      // re-read from effective address
+      Data value{ memory_.read(effective_address) };
+      co_await std::suspend_always{};
+
+      // write the value back to effective address, and do the operation on it
+      memory_.write(effective_address, value);
+      value = std::invoke(operation, this, value);
+      co_await std::suspend_always{};
+
+      // write the new value to effective address
+      memory_.write(effective_address, value);
+      co_return;
+   }
+
+   Instruction CPU::x_indirect(ModifyOperation const operation)
+   {
+      // fetch pointer address, increment PC
+      Address const pointer_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // read from the address, add X to it
+      auto const pointer{ static_cast<Address>(memory_.read(pointer_address) + x_) };
+      co_await std::suspend_always{};
+
+      // fetch effective address low
+      Data const effective_address_low{ memory_.read(pointer) };
+      co_await std::suspend_always{};
+
+      // fetch effective address high
+      Data const effective_address_high{ memory_.read(pointer + 1) };
+      co_await std::suspend_always{};
+
+      // read from effective address
+      Address const effective_address{ assemble_address(effective_address_low, effective_address_high) };
+      auto value{ memory_.read(effective_address) };
+      co_await std::suspend_always{};
+
+      // write the value back to effective address, and do the operation on it
+      memory_.write(effective_address, value);
+      value = std::invoke(operation, this, value);
+      co_await std::suspend_always{};
+
+      // write the new value to effective address
+      memory_.write(effective_address, value);
+      co_return;
+   }
+
+   Instruction CPU::indirect_y(ModifyOperation const operation)
+   {
+      // fetch pointer address, increment PC
+      Address const pointer_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // fetch effective address low
+      Data effective_address_low{ memory_.read(pointer_address) };
+      co_await std::suspend_always{};
+
+      // fetch effective address high, add Y to low byte of effective address
+      Data const effective_address_high{ memory_.read(pointer_address + 1) };
+      bool const overflow{ effective_address_low + y_ < effective_address_low };
+      effective_address_low += y_;
+      co_await std::suspend_always{};
+
+      // read from effective address, fix high byte of effective address
+      Address effective_address{ assemble_address(effective_address_low, effective_address_high) };
+      std::ignore = memory_.read(effective_address);
+      if (overflow)
+         effective_address += 0x0100;
+
+      co_await std::suspend_always{};
+
+      // read from effective address
+      Data value = memory_.read(effective_address);
+      co_await std::suspend_always{};
+
+      // write the value back to effective address, and do the operation on it
+      memory_.write(effective_address, value);
+      value = std::invoke(operation, this, value);
+      co_await std::suspend_always{};
+
+      // write the new value to effective address
+      memory_.write(effective_address, value);
+      co_return;
+   }
+
+   Instruction CPU::absolute(WriteOperation const operation)
+   {
+      // fetch low byte of address, increment PC
+      Data const low_byte_of_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // fetch high byte of address, increment PC
+      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // write register to effective address
+      Address const effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
+      std::invoke(operation, this, effective_address);
+      co_return;
+   }
+
+   Instruction CPU::zero_page(WriteOperation const operation)
+   {
+      // fetch address, increment PC
+      Address const address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // write register to effective address
+      std::invoke(operation, this, address);
+      co_return;
+   }
+
+   Instruction CPU::zero_page_indexed(WriteOperation const operation, Index const index)
+   {
+      // fetch address, increment PC
+      Address const address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // read from address, add index register to it
+      auto const effective_address{ static_cast<Address>(memory_.read(address) + index) };
+      co_await std::suspend_always{};
+
+      // write to effective address
+      std::invoke(operation, this, effective_address);
+      co_return;
+   }
+
+   Instruction CPU::absolute_indexed(WriteOperation const operation, Index const index)
+   {
+      // fetch low byte of address, increment PC
+      Data low_byte_of_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // fetch high byte of address, add index register to low address byte, increment PC
+      Data const high_byte_of_address{ memory_.read(program_counter_++) };
+      bool const overflow{ low_byte_of_address + index < low_byte_of_address };
+      low_byte_of_address += index;
+      co_await std::suspend_always{};
+
+      // read from effective address, fix the high byte of effective address
+      Address effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
+      std::ignore = memory_.read(effective_address);
+      if (overflow)
+         effective_address += 0x0100;
+      co_await std::suspend_always{};
+
+      // write to effective address
+      std::invoke(operation, this, effective_address);
+      co_return;
+   }
+
+   Instruction CPU::x_indirect(WriteOperation const operation)
+   {
+      // fetch pointer address, increment PC
+      Address const pointer_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // read from the address, add X to it
+      auto const pointer{ static_cast<Address>(memory_.read(pointer_address) + x_) };
+      co_await std::suspend_always{};
+
+      // fetch effective address low
+      Data const effective_address_low{ memory_.read(pointer) };
+      co_await std::suspend_always{};
+
+      // fetch effective address high
+      Data const effective_address_high{ memory_.read(pointer + 1) };
+      co_await std::suspend_always{};
+
+      // write to effective address
+      Address const effective_address{ assemble_address(effective_address_low, effective_address_high) };
+      std::invoke(operation, this, effective_address);
+      co_return;
+   }
+
+   Instruction CPU::indirect_y(WriteOperation const operation)
+   {
+      // fetch pointer address, increment PC
+      Address const pointer_address{ memory_.read(program_counter_++) };
+      co_await std::suspend_always{};
+
+      // fetch effective address low
+      Data effective_address_low{ memory_.read(pointer_address) };
+      co_await std::suspend_always{};
+
+      // fetch effective address high, add Y to low byte of effective address
+      Data const effective_address_high{ memory_.read(pointer_address + 1) };
+      bool const overflow{ effective_address_low + y_ < effective_address_low };
+      effective_address_low += y_;
+      co_await std::suspend_always{};
+
+      // read from effective address, fix high byte of effective address
+      Address effective_address{ assemble_address(effective_address_low, effective_address_high) };
+      std::ignore = memory_.read(effective_address);
+      if (overflow)
+         effective_address += 0x0100;
+      co_await std::suspend_always{};
+
+      // write to effective address
+      std::invoke(operation, this, effective_address);
       co_return;
    }
 

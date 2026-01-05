@@ -9,9 +9,9 @@ namespace nes
 {
    class CPU final
    {
-      using ReadOperation = std::function<void(Data)>;
-      using ModifyOperation = std::function<Data(Data)>;
-      using WriteOperation = std::function<Data()>;
+      using ReadOperation = void(CPU::*)(Data);
+      using ModifyOperation = Data(CPU::*)(Data);
+      using WriteOperation = void(CPU::*)(Address);
 
       public:
          static auto constexpr FREQUENCY = 1'789'773;
@@ -61,24 +61,24 @@ namespace nes
          [[nodiscard]] Instruction immediate(ReadOperation operation);
          [[nodiscard]] Instruction absolute(ReadOperation operation);
          [[nodiscard]] Instruction zero_page(ReadOperation operation);
-         [[nodiscard]] Instruction zero_page_indexed(ReadOperation operation, Index const& index);
-         [[nodiscard]] Instruction absolute_indexed(ReadOperation operation, Index const& index);
+         [[nodiscard]] Instruction zero_page_indexed(ReadOperation operation, Index index);
+         [[nodiscard]] Instruction absolute_indexed(ReadOperation operation, Index index);
          [[nodiscard]] Instruction x_indirect(ReadOperation operation);
          [[nodiscard]] Instruction indirect_y(ReadOperation operation);
 
-         // [[nodiscard]] Instruction absolute(ModifyOperation operation);
-         // [[nodiscard]] Instruction zeropage(ModifyOperation operation);
-         // [[nodiscard]] Instruction zeropage_indexed(ModifyOperation operation, Index const& index);
-         // [[nodiscard]] Instruction absolute_indexed(ModifyOperation operation, Index const& index);
-         // [[nodiscard]] Instruction indexed_indirect(ModifyOperation operation);
-         // [[nodiscard]] Instruction indirect_indexed(ModifyOperation operation);
+         [[nodiscard]] Instruction absolute(ModifyOperation operation);
+         [[nodiscard]] Instruction zero_page(ModifyOperation operation);
+         [[nodiscard]] Instruction zero_page_indexed(ModifyOperation operation, Index index);
+         [[nodiscard]] Instruction absolute_indexed(ModifyOperation operation, Index index);
+         [[nodiscard]] Instruction x_indirect(ModifyOperation operation);
+         [[nodiscard]] Instruction indirect_y(ModifyOperation operation);
 
-         // [[nodiscard]] Instruction absolute(WriteOperation operation);
-         // [[nodiscard]] Instruction zeropage(WriteOperation operation);
-         // [[nodiscard]] Instruction zeropage_indexed(WriteOperation operation, Index const& index);
-         // [[nodiscard]] Instruction absolute_indexed(WriteOperation operation, Index const& index);
-         // [[nodiscard]] Instruction indexed_indirect(WriteOperation operation);
-         // [[nodiscard]] Instruction indirect_indexed(WriteOperation operation);
+         [[nodiscard]] Instruction absolute(WriteOperation operation);
+         [[nodiscard]] Instruction zero_page(WriteOperation operation);
+         [[nodiscard]] Instruction zero_page_indexed(WriteOperation operation, Index index);
+         [[nodiscard]] Instruction absolute_indexed(WriteOperation operation, Index index);
+         [[nodiscard]] Instruction x_indirect(WriteOperation operation);
+         [[nodiscard]] Instruction indirect_y(WriteOperation operation);
 
          void lda(Data value);
          void ora(Data value);

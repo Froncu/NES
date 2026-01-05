@@ -30,8 +30,6 @@ int main(int, char**)
    memory.write(0x0601, 0xFF);
    memory.write(0x0602, static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_X_INDIRECT));
    memory.write(0x0603, 0x01);
-   memory.write(0x0604, static_cast<std::underlying_type_t<nes::CPU::Opcode>>(nes::CPU::Opcode::ORA_ZERO_PAGE));
-   memory.write(0x0605, 0xFF);
 
    double cycle_accumulator{};
    auto previous_time{ std::chrono::high_resolution_clock::now() };
