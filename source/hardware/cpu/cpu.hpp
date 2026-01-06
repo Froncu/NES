@@ -20,7 +20,7 @@ namespace nes
             ORA_X_INDIRECT   = 0x01,
             JAM_IMPLIED_02   = 0x02,
             SLO_X_INDIRECT   = 0x03,
-            NOP_ZERO_PAGE    = 0x04,
+            NOP_ZERO_PAGE_04 = 0x04,
             ORA_ZERO_PAGE    = 0x05,
             ASL_ZERO_PAGE    = 0x06,
             SLO_ZERO_PAGE    = 0x07,
@@ -327,6 +327,7 @@ namespace nes
          [[nodiscard]] Instruction rst_implied();
          [[nodiscard]] Instruction brk_implied();
          [[nodiscard]] Instruction jam_implied();
+         [[nodiscard]] Instruction php_implied();
 
          [[nodiscard]] Instruction immediate(ReadOperation operation);
          [[nodiscard]] Instruction absolute(ReadOperation operation);
@@ -336,6 +337,7 @@ namespace nes
          [[nodiscard]] Instruction x_indirect(ReadOperation operation);
          [[nodiscard]] Instruction indirect_y(ReadOperation operation);
 
+         [[nodiscard]] Instruction accumulator(ModifyOperation operation);
          [[nodiscard]] Instruction absolute(ModifyOperation operation);
          [[nodiscard]] Instruction zero_page(ModifyOperation operation);
          [[nodiscard]] Instruction zero_page_indexed(ModifyOperation operation, Index index);
@@ -353,7 +355,10 @@ namespace nes
          void ora(Data value);
          void lda(Data value);
 
+         [[nodiscard]] Data asl(Data value);
+
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
+         void change_processor_status_flags(std::initializer_list<ProcessorStatusFlag> flags, bool set);
          void push(Data value);
          [[nodiscard]] Data pop();
 

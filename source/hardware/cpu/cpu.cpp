@@ -25,8 +25,54 @@ namespace nes
                current_instruction_ = jam_implied();
                break;
 
+            case Opcode::SLO_X_INDIRECT:
+               break;
+
+            case Opcode::NOP_ZERO_PAGE_04:
+               break;
+
+            case Opcode::ORA_ZERO_PAGE:
+               current_instruction_ = zero_page(&Processor::ora);
+               break;
+
+            case Opcode::ASL_ZERO_PAGE:
+               current_instruction_ = zero_page(&Processor::asl);
+               break;
+
             case Opcode::ORA_INDIRECT_Y:
                current_instruction_ = indirect_y(&Processor::ora);
+               break;
+
+            case Opcode::SLO_ZERO_PAGE:
+               break;
+
+            case Opcode::PHP_IMPLIED:
+               current_instruction_ = php_implied();
+               break;
+
+            case Opcode::ORA_IMMEDIATE:
+               current_instruction_ = immediate(&Processor::ora);
+               break;
+
+            case Opcode::ASL_ACCUMULATOR:
+               current_instruction_ = accumulator(&Processor::asl);
+               break;
+
+            case Opcode::ANC_IMMEDIATE_0B:
+               break;
+
+            case Opcode::NOP_ABSOLUTE:
+               break;
+
+            case Opcode::ORA_ABSOLUTE:
+               current_instruction_ = absolute(&Processor::ora);
+               break;
+
+            case Opcode::ASL_ABSOLUTE:
+               current_instruction_ = absolute(&Processor::asl);
+               break;
+
+            case Opcode::SLO_ABSOLUTE:
                break;
 
             default:
@@ -155,6 +201,18 @@ namespace nes
    {
       while (true)
          co_await std::suspend_always{};
+   }
+
+   Instruction Processor::php_implied()
+   {
+      // read next instruction byte (and throw it away)
+      std::ignore = memory_.read(program_counter);
+      co_await std::suspend_always{};
+
+      // push register on stack, decrement S
+      change_processor_status_flags({ ProcessorStatusFlag::B, ProcessorStatusFlag::_ }, false);
+      push(processor_status_);
+      co_return;
    }
 
    Instruction Processor::immediate(ReadOperation const operation)
@@ -297,6 +355,13 @@ namespace nes
       }
 
       std::invoke(operation, this, value);
+      co_return;
+   }
+
+   Instruction Processor::accumulator(ModifyOperation operation)
+   {
+      // do the operation on the accumulator
+      accumulator_ = std::invoke(operation, this, accumulator_);
       co_return;
    }
 
@@ -600,7 +665,7 @@ namespace nes
       change_processor_status_flag(ProcessorStatusFlag::Z, not accumulator_);
 
       // N set if bit 7 of the accumulator is set after ORA
-      change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b10000000);
+      change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b1000'0000);
    }
 
    void Processor::lda(Data const value)
@@ -612,7 +677,24 @@ namespace nes
       change_processor_status_flag(ProcessorStatusFlag::Z, not accumulator_);
 
       // N set if bit 7 of the accumulator is set after LDA
-      change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b10000000);
+      change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b1000'0000);
+   }
+
+   Data Processor::asl(Data value)
+   {
+      // C set to bit 7 of value before ASL
+      change_processor_status_flag(ProcessorStatusFlag::C, value & 0b1000'0000);
+
+      // shift value left by 1
+      value <<= 1;
+
+      // Z set if the value is zero after ASL
+      change_processor_status_flag(ProcessorStatusFlag::Z, not value);
+
+      // N set if bit 7 of the value is set after ASL
+      change_processor_status_flag(ProcessorStatusFlag::N, value & 0b1000'0000);
+
+      return value;
    }
 
    void Processor::change_processor_status_flag(ProcessorStatusFlag const flag, bool const set)
@@ -621,6 +703,17 @@ namespace nes
       set
          ? processor_status_ |= underlying_flag
          : processor_status_ &= ~underlying_flag;
+   }
+
+   void Processor::change_processor_status_flags(std::initializer_list<ProcessorStatusFlag> const flags, bool const set)
+   {
+      ProcessorStatus underlying_flags{ 0b0000'0000 };
+      for (ProcessorStatusFlag const flag : flags)
+         underlying_flags |= static_cast<std::underlying_type_t<ProcessorStatusFlag>>(flag);
+
+      set
+         ? processor_status_ |= underlying_flags
+         : processor_status_ &= ~underlying_flags;
    }
 
    void Processor::push(Data const value)
