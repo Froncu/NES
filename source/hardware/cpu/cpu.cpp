@@ -3,12 +3,12 @@
 
 namespace nes
 {
-   CPU::CPU(Memory& memory)
+   Processor::Processor(Memory& memory)
       : memory_{ memory }
    {
    }
 
-   void CPU::tick()
+   void Processor::tick()
    {
       if (not current_instruction_)
          switch (Opcode const opcode{ memory_.read(program_counter++) })
@@ -18,11 +18,14 @@ namespace nes
                break;
 
             case Opcode::ORA_X_INDIRECT:
-               current_instruction_ = x_indirect(&CPU::ora);
+               current_instruction_ = x_indirect(&Processor::ora);
+               break;
+
+            case Opcode::JAM_IMPLIED_02:
                break;
 
             case Opcode::ORA_INDIRECT_Y:
-               current_instruction_ = indirect_y(&CPU::ora);
+               current_instruction_ = indirect_y(&Processor::ora);
                break;
 
             default:
@@ -37,51 +40,51 @@ namespace nes
       ++cycle_;
    }
 
-   void CPU::step()
+   void Processor::step()
    {
       do
          tick();
       while (current_instruction_);
    }
 
-   void CPU::reset()
+   void Processor::reset()
    {
       cycle_ = 0;
       current_instruction_ = rst_implied();
    }
 
-   Cycle CPU::cycle() const
+   Cycle Processor::cycle() const
    {
       return cycle_;
    }
 
-   Accumulator CPU::accumulator() const
+   Accumulator Processor::accumulator() const
    {
       return accumulator_;
    }
 
-   Index CPU::x() const
+   Index Processor::x() const
    {
       return x_;
    }
 
-   Index CPU::y() const
+   Index Processor::y() const
    {
       return y_;
    }
 
-   StackPointer CPU::stack_pointer() const
+   StackPointer Processor::stack_pointer() const
    {
       return stack_pointer_;
    }
 
-   ProcessorStatus CPU::processor_status() const
+   ProcessorStatus Processor::processor_status() const
    {
       return processor_status_;
    }
 
    // TODO: find what exactly happens here
-   Instruction CPU::rst_implied()
+   Instruction Processor::rst_implied()
    {
       co_await std::suspend_always{};
 
@@ -103,7 +106,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::brk_implied()
+   Instruction Processor::brk_implied()
    {
       // read next instruction byte (and throw it away), increment PC
       std::ignore = memory_.read(program_counter++);
@@ -131,7 +134,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::immediate(ReadOperation const operation)
+   Instruction Processor::immediate(ReadOperation const operation)
    {
       // fetch value, increment PC
       Data const value{ memory_.read(program_counter++) };
@@ -140,7 +143,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::absolute(ReadOperation const operation)
+   Instruction Processor::absolute(ReadOperation const operation)
    {
       // fetch low byte of address, increment PC
       Data const low_byte_of_address{ memory_.read(program_counter++) };
@@ -158,7 +161,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::zero_page(ReadOperation const operation)
+   Instruction Processor::zero_page(ReadOperation const operation)
    {
       // fetch address, increment PC
       Address const address{ memory_.read(program_counter++) };
@@ -171,7 +174,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::zero_page_indexed(ReadOperation const operation, Index const index)
+   Instruction Processor::zero_page_indexed(ReadOperation const operation, Index const index)
    {
       // fetch address, increment PC
       Address const address{ memory_.read(program_counter++) };
@@ -188,7 +191,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::absolute_indexed(ReadOperation const operation, Index const index)
+   Instruction Processor::absolute_indexed(ReadOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
       Data low_byte_of_address{ memory_.read(program_counter++) };
@@ -216,7 +219,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::x_indirect(ReadOperation const operation)
+   Instruction Processor::x_indirect(ReadOperation const operation)
    {
       // fetch pointer address, increment PC
       Address const pointer_address{ memory_.read(program_counter++) };
@@ -242,7 +245,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::indirect_y(ReadOperation const operation)
+   Instruction Processor::indirect_y(ReadOperation const operation)
    {
       // fetch pointer address, increment PC
       Address const pointer_address{ memory_.read(program_counter++) };
@@ -274,7 +277,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::absolute(ModifyOperation const operation)
+   Instruction Processor::absolute(ModifyOperation const operation)
    {
       // fetch low byte of address, increment PC
       Data const low_byte_of_address{ memory_.read(program_counter++) };
@@ -299,7 +302,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::zero_page(ModifyOperation const operation)
+   Instruction Processor::zero_page(ModifyOperation const operation)
    {
       // fetch address, increment PC
       Address const address{ memory_.read(program_counter++) };
@@ -319,7 +322,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::zero_page_indexed(ModifyOperation const operation, Index const index)
+   Instruction Processor::zero_page_indexed(ModifyOperation const operation, Index const index)
    {
       // fetch address, increment PC
       Address const address{ memory_.read(program_counter++) };
@@ -343,7 +346,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::absolute_indexed(ModifyOperation const operation, Index const index)
+   Instruction Processor::absolute_indexed(ModifyOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
       Data low_byte_of_address{ memory_.read(program_counter++) };
@@ -376,7 +379,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::x_indirect(ModifyOperation const operation)
+   Instruction Processor::x_indirect(ModifyOperation const operation)
    {
       // fetch pointer address, increment PC
       Address const pointer_address{ memory_.read(program_counter++) };
@@ -409,7 +412,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::indirect_y(ModifyOperation const operation)
+   Instruction Processor::indirect_y(ModifyOperation const operation)
    {
       // fetch pointer address, increment PC
       Address const pointer_address{ memory_.read(program_counter++) };
@@ -447,7 +450,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::absolute(WriteOperation const operation)
+   Instruction Processor::absolute(WriteOperation const operation)
    {
       // fetch low byte of address, increment PC
       Data const low_byte_of_address{ memory_.read(program_counter++) };
@@ -463,7 +466,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::zero_page(WriteOperation const operation)
+   Instruction Processor::zero_page(WriteOperation const operation)
    {
       // fetch address, increment PC
       Address const address{ memory_.read(program_counter++) };
@@ -474,7 +477,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::zero_page_indexed(WriteOperation const operation, Index const index)
+   Instruction Processor::zero_page_indexed(WriteOperation const operation, Index const index)
    {
       // fetch address, increment PC
       Address const address{ memory_.read(program_counter++) };
@@ -489,7 +492,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::absolute_indexed(WriteOperation const operation, Index const index)
+   Instruction Processor::absolute_indexed(WriteOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
       Data low_byte_of_address{ memory_.read(program_counter++) };
@@ -513,7 +516,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::x_indirect(WriteOperation const operation)
+   Instruction Processor::x_indirect(WriteOperation const operation)
    {
       // fetch pointer address, increment PC
       Address const pointer_address{ memory_.read(program_counter++) };
@@ -537,7 +540,7 @@ namespace nes
       co_return;
    }
 
-   Instruction CPU::indirect_y(WriteOperation const operation)
+   Instruction Processor::indirect_y(WriteOperation const operation)
    {
       // fetch pointer address, increment PC
       Address const pointer_address{ memory_.read(program_counter++) };
@@ -565,19 +568,7 @@ namespace nes
       co_return;
    }
 
-   void CPU::lda(Data const value)
-   {
-      // load value into accumulator
-      accumulator_ = value;
-
-      // Z set if the accumulator is zero after LDA
-      change_processor_status_flag(ProcessorStatusFlag::Z, not accumulator_);
-
-      // N set if bit 7 of the accumulator is set after LDA
-      change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b10000000);
-   }
-
-   void CPU::ora(Data const value)
+   void Processor::ora(Data const value)
    {
       // ORA value with accumulator
       accumulator_ |= value;
@@ -589,7 +580,19 @@ namespace nes
       change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b10000000);
    }
 
-   void CPU::change_processor_status_flag(ProcessorStatusFlag const flag, bool const set)
+   void Processor::lda(Data const value)
+   {
+      // load value into accumulator
+      accumulator_ = value;
+
+      // Z set if the accumulator is zero after LDA
+      change_processor_status_flag(ProcessorStatusFlag::Z, not accumulator_);
+
+      // N set if bit 7 of the accumulator is set after LDA
+      change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b10000000);
+   }
+
+   void Processor::change_processor_status_flag(ProcessorStatusFlag const flag, bool const set)
    {
       auto const underlying_flag{ static_cast<std::underlying_type_t<ProcessorStatusFlag>>(flag) };
       set
@@ -597,17 +600,17 @@ namespace nes
          : processor_status_ &= ~underlying_flag;
    }
 
-   void CPU::push(Data const value)
+   void Processor::push(Data const value)
    {
       memory_.write(0x0100 + stack_pointer_--, value);
    }
 
-   Data CPU::pop()
+   Data Processor::pop()
    {
       return memory_.read(0x0100 + ++stack_pointer_);
    }
 
-   Address CPU::assemble_address(Data const low_byte, Data const high_byte)
+   Address Processor::assemble_address(Data const low_byte, Data const high_byte)
    {
       return high_byte << 8 | low_byte;
    }

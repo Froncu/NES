@@ -44,7 +44,7 @@ namespace nes
       NFD::Quit();
    }
 
-   bool Visualiser::update(Memory const& memory, CPU& processor)
+   bool Visualiser::update(Memory const& memory, Processor& processor)
    {
       SDL_Event event;
       while (SDL_PollEvent(&event))
@@ -172,22 +172,22 @@ namespace nes
                ImGui::Text("S: %02X", processor.stack_pointer());
 
                auto const cast{
-                  [](CPU::ProcessorStatusFlag const flag)
+                  [](Processor::ProcessorStatusFlag const flag)
                   {
-                     return static_cast<std::underlying_type_t<CPU::ProcessorStatusFlag>>(flag);
+                     return static_cast<std::underlying_type_t<Processor::ProcessorStatusFlag>>(flag);
                   }
                };
 
                ProcessorStatus const processor_status{ processor.processor_status() };
                ImGui::Text(std::format("P: {}{}{}{}{}{}{}{}",
-                  processor_status & cast(CPU::ProcessorStatusFlag::N) ? 'N' : '-',
-                  processor_status & cast(CPU::ProcessorStatusFlag::V) ? 'V' : '-',
-                  processor_status & cast(CPU::ProcessorStatusFlag::_) ? '_' : '-',
-                  processor_status & cast(CPU::ProcessorStatusFlag::B) ? 'B' : '-',
-                  processor_status & cast(CPU::ProcessorStatusFlag::D) ? 'D' : '-',
-                  processor_status & cast(CPU::ProcessorStatusFlag::I) ? 'I' : '-',
-                  processor_status & cast(CPU::ProcessorStatusFlag::Z) ? 'Z' : '-',
-                  processor_status & cast(CPU::ProcessorStatusFlag::C) ? 'C' : '-').c_str());
+                  processor_status & cast(Processor::ProcessorStatusFlag::N) ? 'N' : '-',
+                  processor_status & cast(Processor::ProcessorStatusFlag::V) ? 'V' : '-',
+                  processor_status & cast(Processor::ProcessorStatusFlag::_) ? '_' : '-',
+                  processor_status & cast(Processor::ProcessorStatusFlag::B) ? 'B' : '-',
+                  processor_status & cast(Processor::ProcessorStatusFlag::D) ? 'D' : '-',
+                  processor_status & cast(Processor::ProcessorStatusFlag::I) ? 'I' : '-',
+                  processor_status & cast(Processor::ProcessorStatusFlag::Z) ? 'Z' : '-',
+                  processor_status & cast(Processor::ProcessorStatusFlag::C) ? 'C' : '-').c_str());
 
                if (ImGui::Checkbox("Tick repeatedly", &tick_repeatedly_); not tick_repeatedly_)
                {

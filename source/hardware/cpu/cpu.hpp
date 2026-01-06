@@ -7,11 +7,11 @@
 
 namespace nes
 {
-   class CPU final
+   class Processor final
    {
-      using ReadOperation = void(CPU::*)(Data);
-      using ModifyOperation = Data(CPU::*)(Data);
-      using WriteOperation = void(CPU::*)(Address);
+      using ReadOperation = void(Processor::*)(Data);
+      using ModifyOperation = Data(Processor::*)(Data);
+      using WriteOperation = void(Processor::*)(Address);
 
       public:
          enum class Opcode : Data
@@ -301,14 +301,14 @@ namespace nes
             N = 0b10000000
          };
 
-         explicit CPU(Memory& memory);
-         CPU(CPU const&) = delete;
-         CPU(CPU&&) = delete;
+         explicit Processor(Memory& memory);
+         Processor(Processor const&) = delete;
+         Processor(Processor&&) = delete;
 
-         ~CPU() = default;
+         ~Processor() = default;
 
-         CPU& operator=(CPU const&) = delete;
-         CPU& operator=(CPU&&) = delete;
+         Processor& operator=(Processor const&) = delete;
+         Processor& operator=(Processor&&) = delete;
 
          void tick();
          void step();
@@ -349,8 +349,8 @@ namespace nes
          [[nodiscard]] Instruction x_indirect(WriteOperation operation);
          [[nodiscard]] Instruction indirect_y(WriteOperation operation);
 
-         void lda(Data value);
          void ora(Data value);
+         void lda(Data value);
 
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
          void push(Data value);

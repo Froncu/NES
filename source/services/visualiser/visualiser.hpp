@@ -50,7 +50,7 @@ namespace nes
          Visualiser& operator=(Visualiser const&) = delete;
          Visualiser& operator=(Visualiser&&) = delete;
 
-         [[nodiscard]] bool update(Memory const& memory, CPU& processor);
+         [[nodiscard]] bool update(Memory const& memory, Processor& processor);
 
          [[nodiscard]] bool tick_repeatedly() const;
          [[nodiscard]] bool tick_once() const;
