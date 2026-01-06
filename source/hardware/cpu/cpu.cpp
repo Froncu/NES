@@ -25,11 +25,11 @@ namespace nes
                current_instruction_ = jam_implied();
                break;
 
-            case Opcode::SLO_X_INDIRECT:
-               break;
+            // case Opcode::SLO_X_INDIRECT:
+            //    break;
 
-            case Opcode::NOP_ZERO_PAGE_04:
-               break;
+            // case Opcode::NOP_ZERO_PAGE_04:
+            //    break;
 
             case Opcode::ORA_ZERO_PAGE:
                current_instruction_ = zero_page(&Processor::ora);
@@ -43,8 +43,8 @@ namespace nes
                current_instruction_ = indirect_y(&Processor::ora);
                break;
 
-            case Opcode::SLO_ZERO_PAGE:
-               break;
+            // case Opcode::SLO_ZERO_PAGE:
+            //    break;
 
             case Opcode::PHP_IMPLIED:
                current_instruction_ = php_implied();
@@ -58,11 +58,11 @@ namespace nes
                current_instruction_ = accumulator(&Processor::asl);
                break;
 
-            case Opcode::ANC_IMMEDIATE_0B:
-               break;
+            // case Opcode::ANC_IMMEDIATE_0B:
+            //    break;
 
-            case Opcode::NOP_ABSOLUTE:
-               break;
+            // case Opcode::NOP_ABSOLUTE:
+            //    break;
 
             case Opcode::ORA_ABSOLUTE:
                current_instruction_ = absolute(&Processor::ora);
@@ -72,8 +72,8 @@ namespace nes
                current_instruction_ = absolute(&Processor::asl);
                break;
 
-            case Opcode::SLO_ABSOLUTE:
-               break;
+            // case Opcode::SLO_ABSOLUTE:
+            //    break;
 
             default:
                throw UnsupportedOpcode{
