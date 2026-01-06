@@ -14,6 +14,7 @@ namespace nes
    using ProcessorStatus = std::uint8_t;
 
    using Data = std::uint8_t;
+   using SignedData = std::int8_t;
 }
 
 #endif

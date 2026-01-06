@@ -8,83 +8,23 @@ namespace nes
    {
    }
 
-   void Processor::tick()
+   bool Processor::tick()
    {
+      bool instruction_completed;
       if (not current_instruction_)
-         switch (current_opcode_ = static_cast<Opcode>(memory_.read(program_counter++)))
-         {
-            case Opcode::BRK_IMPLIED:
-               current_instruction_ = brk_implied();
-               break;
-
-            case Opcode::ORA_X_INDIRECT:
-               current_instruction_ = x_indirect(&Processor::ora);
-               break;
-
-            case Opcode::JAM_IMPLIED_02:
-               current_instruction_ = jam_implied();
-               break;
-
-            // case Opcode::SLO_X_INDIRECT:
-            //    break;
-
-            // case Opcode::NOP_ZERO_PAGE_04:
-            //    break;
-
-            case Opcode::ORA_ZERO_PAGE:
-               current_instruction_ = zero_page(&Processor::ora);
-               break;
-
-            case Opcode::ASL_ZERO_PAGE:
-               current_instruction_ = zero_page(&Processor::asl);
-               break;
-
-            case Opcode::ORA_INDIRECT_Y:
-               current_instruction_ = indirect_y(&Processor::ora);
-               break;
-
-            // case Opcode::SLO_ZERO_PAGE:
-            //    break;
-
-            case Opcode::PHP_IMPLIED:
-               current_instruction_ = php_implied();
-               break;
-
-            case Opcode::ORA_IMMEDIATE:
-               current_instruction_ = immediate(&Processor::ora);
-               break;
-
-            case Opcode::ASL_ACCUMULATOR:
-               current_instruction_ = accumulator(&Processor::asl);
-               break;
-
-            // case Opcode::ANC_IMMEDIATE_0B:
-            //    break;
-
-            // case Opcode::NOP_ABSOLUTE:
-            //    break;
-
-            case Opcode::ORA_ABSOLUTE:
-               current_instruction_ = absolute(&Processor::ora);
-               break;
-
-            case Opcode::ASL_ABSOLUTE:
-               current_instruction_ = absolute(&Processor::asl);
-               break;
-
-            // case Opcode::SLO_ABSOLUTE:
-            //    break;
-
-            default:
-               throw UnsupportedOpcode{
-                  static_cast<decltype(program_counter)>(program_counter - 1),
-                  static_cast<std::underlying_type_t<Opcode>>(current_opcode_)
-               };
-         }
-      else if (current_instruction_->tick())
-         current_instruction_.reset();
+      {
+         current_opcode_ = static_cast<Opcode>(memory_.read(program_counter++));
+         current_instruction_ = instruction_from_opcode(current_opcode_);
+         instruction_completed = false;
+      }
+      else if (instruction_completed = current_instruction_->tick(); instruction_completed)
+      {
+         std::optional prefetched_instruction{ current_instruction_->prefetched_instruction() };
+         current_instruction_ = std::move(prefetched_instruction);
+      }
 
       ++cycle_;
+      return instruction_completed;
    }
 
    void Processor::step()
@@ -105,8 +45,7 @@ namespace nes
          current_opcode_ == Opcode::JAM_IMPLIED_F2)
          return;
 
-      while (current_instruction_)
-         tick();
+      while (not tick());
    }
 
    void Processor::reset()
@@ -166,7 +105,7 @@ namespace nes
       co_await std::suspend_always{};
 
       program_counter |= memory_.read(0xFFFD) << 8;
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::brk_implied()
@@ -194,13 +133,15 @@ namespace nes
 
       // fetch PCH
       program_counter |= memory_.read(0xFFFF) << 8;
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::jam_implied()
    {
       while (true)
          co_await std::suspend_always{};
+
+      co_return std::nullopt;
    }
 
    Instruction Processor::php_implied()
@@ -212,7 +153,39 @@ namespace nes
       // push P on stack (with B and _ flag set)
       change_processor_status_flags({ ProcessorStatusFlag::B, ProcessorStatusFlag::_ }, true);
       push(processor_status_);
-      co_return;
+      co_return std::nullopt;
+   }
+
+   Instruction Processor::relative(BranchOperation const operation)
+   {
+      // fetch operand, increment PC
+      auto const operand{ static_cast<SignedData>(memory_.read(program_counter++)) };
+      co_await std::suspend_always{};
+
+      // fetch opcode of next instruction, if branch is taken, add operand to PCL, otherwise increment PC
+      Instruction next_instruction{ instruction_from_opcode(static_cast<Opcode>(memory_.read(program_counter))) };
+      if (std::invoke(operation, this))
+      {
+         auto const [modified_program_counter, overflow] = add_low_byte(program_counter, operand);
+         program_counter = modified_program_counter;
+         co_await std::suspend_always{};
+
+         // fetch opcode of next instruction, fix PCH, if it did not change, increment PC (+)
+         next_instruction = instruction_from_opcode(static_cast<Opcode>(memory_.read(program_counter)));
+         if (overflow)
+         {
+            program_counter = std::signbit(operand)
+               ? subtract_high_byte(program_counter, 1).first
+               : add_high_byte(program_counter, 1).first;
+            co_await std::suspend_always{};
+
+            // fetch opcode of next instruction, increment PC (!)
+            next_instruction = instruction_from_opcode(static_cast<Opcode>(memory_.read(program_counter)));
+         }
+      }
+
+      ++program_counter;
+      co_return std::move(next_instruction);
    }
 
    Instruction Processor::immediate(ReadOperation const operation)
@@ -221,7 +194,7 @@ namespace nes
       Data const value{ memory_.read(program_counter++) };
 
       std::invoke(operation, this, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::absolute(ReadOperation const operation)
@@ -239,7 +212,7 @@ namespace nes
       Data const value{ memory_.read(effective_address) };
 
       std::invoke(operation, this, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::zero_page(ReadOperation const operation)
@@ -252,7 +225,7 @@ namespace nes
       Data const value{ memory_.read(address) };
 
       std::invoke(operation, this, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::zero_page_indexed(ReadOperation const operation, Index const index)
@@ -269,27 +242,25 @@ namespace nes
       Data const value{ memory_.read(effective_address) };
 
       std::invoke(operation, this, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::absolute_indexed(ReadOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
-      Data low_byte_of_address{ memory_.read(program_counter++) };
+      Data const low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, add index register to low address byte, increment PC
       Data const high_byte_of_address{ memory_.read(program_counter++) };
-      bool const overflow{ low_byte_of_address + index < low_byte_of_address };
-      low_byte_of_address += index;
+      auto [effective_address, overflow]{ add_low_byte(assemble_address(low_byte_of_address, high_byte_of_address), index) };
       co_await std::suspend_always{};
 
       // read from effective address, fix the high byte of effective address
-      Address effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
       Data value{ memory_.read(effective_address) };
       if (overflow)
       {
-         ++effective_address;
+         effective_address = add_high_byte(effective_address, 1).first;
          co_await std::suspend_always{};
 
          // re-read from effective address (+)
@@ -297,7 +268,7 @@ namespace nes
       }
 
       std::invoke(operation, this, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::x_indirect(ReadOperation const operation)
@@ -323,7 +294,7 @@ namespace nes
       auto const value{ memory_.read(effective_address) };
 
       std::invoke(operation, this, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::indirect_y(ReadOperation const operation)
@@ -333,21 +304,19 @@ namespace nes
       co_await std::suspend_always{};
 
       // fetch effective address low
-      Data effective_address_low{ memory_.read(pointer_address) };
+      Data const effective_address_low{ memory_.read(pointer_address) };
       co_await std::suspend_always{};
 
       // fetch effective address high, add Y to low byte of effective address
       Data const effective_address_high{ memory_.read(pointer_address + 1) };
-      bool const overflow{ effective_address_low + y_ < effective_address_low };
-      effective_address_low += y_;
+      auto [effective_address, overflow]{ add_low_byte(assemble_address(effective_address_low, effective_address_high), y_) };
       co_await std::suspend_always{};
 
       // read from effective address, fix high byte of effective address
-      Address effective_address{ assemble_address(effective_address_low, effective_address_high) };
       Data value = memory_.read(effective_address);
       if (overflow)
       {
-         ++effective_address;
+         effective_address = add_high_byte(effective_address, 1).first;
          co_await std::suspend_always{};
 
          // re-read from effective address (+)
@@ -355,14 +324,14 @@ namespace nes
       }
 
       std::invoke(operation, this, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::accumulator(ModifyOperation operation)
    {
       // do the operation on the accumulator
       accumulator_ = std::invoke(operation, this, accumulator_);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::absolute(ModifyOperation const operation)
@@ -387,7 +356,7 @@ namespace nes
 
       // write the new value to effective address
       memory_.write(effective_address, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::zero_page(ModifyOperation const operation)
@@ -407,7 +376,7 @@ namespace nes
 
       // write the new value to effective address
       memory_.write(address, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::zero_page_indexed(ModifyOperation const operation, Index const index)
@@ -431,26 +400,24 @@ namespace nes
 
       // write the new value to effective address
       memory_.write(address, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::absolute_indexed(ModifyOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
-      Data low_byte_of_address{ memory_.read(program_counter++) };
+      Data const low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, add index register to low address byte, increment PC
       Data const high_byte_of_address{ memory_.read(program_counter++) };
-      bool const overflow{ low_byte_of_address + index < low_byte_of_address };
-      low_byte_of_address += index;
+      auto [effective_address, overflow]{ add_low_byte(assemble_address(low_byte_of_address, high_byte_of_address), index) };
       co_await std::suspend_always{};
 
       // read from effective address, fix the high byte of effective address
-      Address effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
       std::ignore = memory_.read(effective_address);
       if (overflow)
-         effective_address += 0x0100;
+         effective_address = add_high_byte(effective_address, 1).first;
       co_await std::suspend_always{};
 
       // re-read from effective address
@@ -464,7 +431,7 @@ namespace nes
 
       // write the new value to effective address
       memory_.write(effective_address, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::x_indirect(ModifyOperation const operation)
@@ -497,7 +464,7 @@ namespace nes
 
       // write the new value to effective address
       memory_.write(effective_address, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::indirect_y(ModifyOperation const operation)
@@ -507,20 +474,18 @@ namespace nes
       co_await std::suspend_always{};
 
       // fetch effective address low
-      Data effective_address_low{ memory_.read(pointer_address) };
+      Data const effective_address_low{ memory_.read(pointer_address) };
       co_await std::suspend_always{};
 
       // fetch effective address high, add Y to low byte of effective address
       Data const effective_address_high{ memory_.read(pointer_address + 1) };
-      bool const overflow{ effective_address_low + y_ < effective_address_low };
-      effective_address_low += y_;
+      auto [effective_address, overflow]{ add_low_byte(assemble_address(effective_address_low, effective_address_high), y_) };
       co_await std::suspend_always{};
 
       // read from effective address, fix high byte of effective address
-      Address effective_address{ assemble_address(effective_address_low, effective_address_high) };
       std::ignore = memory_.read(effective_address);
       if (overflow)
-         effective_address += 0x0100;
+         effective_address = add_high_byte(effective_address, 1).first;
 
       co_await std::suspend_always{};
 
@@ -535,7 +500,7 @@ namespace nes
 
       // write the new value to effective address
       memory_.write(effective_address, value);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::absolute(WriteOperation const operation)
@@ -551,7 +516,7 @@ namespace nes
       // write register to effective address
       Address const effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
       std::invoke(operation, this, effective_address);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::zero_page(WriteOperation const operation)
@@ -562,7 +527,7 @@ namespace nes
 
       // write register to effective address
       std::invoke(operation, this, address);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::zero_page_indexed(WriteOperation const operation, Index const index)
@@ -577,31 +542,29 @@ namespace nes
 
       // write to effective address
       std::invoke(operation, this, effective_address);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::absolute_indexed(WriteOperation const operation, Index const index)
    {
       // fetch low byte of address, increment PC
-      Data low_byte_of_address{ memory_.read(program_counter++) };
+      Data const low_byte_of_address{ memory_.read(program_counter++) };
       co_await std::suspend_always{};
 
       // fetch high byte of address, add index register to low address byte, increment PC
       Data const high_byte_of_address{ memory_.read(program_counter++) };
-      bool const overflow{ low_byte_of_address + index < low_byte_of_address };
-      low_byte_of_address += index;
+      auto [effective_address, overflow]{ add_low_byte(assemble_address(low_byte_of_address, high_byte_of_address), index) };
       co_await std::suspend_always{};
 
       // read from effective address, fix the high byte of effective address
-      Address effective_address{ assemble_address(low_byte_of_address, high_byte_of_address) };
       std::ignore = memory_.read(effective_address);
       if (overflow)
-         effective_address += 0x0100;
+         effective_address = add_high_byte(effective_address, 1).first;
       co_await std::suspend_always{};
 
       // write to effective address
       std::invoke(operation, this, effective_address);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::x_indirect(WriteOperation const operation)
@@ -625,7 +588,7 @@ namespace nes
       // write to effective address
       Address const effective_address{ assemble_address(effective_address_low, effective_address_high) };
       std::invoke(operation, this, effective_address);
-      co_return;
+      co_return std::nullopt;
    }
 
    Instruction Processor::indirect_y(WriteOperation const operation)
@@ -635,25 +598,28 @@ namespace nes
       co_await std::suspend_always{};
 
       // fetch effective address low
-      Data effective_address_low{ memory_.read(pointer_address) };
+      Data const effective_address_low{ memory_.read(pointer_address) };
       co_await std::suspend_always{};
 
       // fetch effective address high, add Y to low byte of effective address
       Data const effective_address_high{ memory_.read(pointer_address + 1) };
-      bool const overflow{ effective_address_low + y_ < effective_address_low };
-      effective_address_low += y_;
+      auto [effective_address, overflow]{ add_low_byte(assemble_address(effective_address_low, effective_address_high), y_) };
       co_await std::suspend_always{};
 
       // read from effective address, fix high byte of effective address
-      Address effective_address{ assemble_address(effective_address_low, effective_address_high) };
       std::ignore = memory_.read(effective_address);
       if (overflow)
-         effective_address += 0x0100;
+         effective_address = add_high_byte(effective_address, 1).first;
       co_await std::suspend_always{};
 
       // write to effective address
       std::invoke(operation, this, effective_address);
-      co_return;
+      co_return std::nullopt;
+   }
+
+   bool Processor::bpl() const
+   {
+      return not processor_status_flag(ProcessorStatusFlag::N);
    }
 
    void Processor::ora(Data const value)
@@ -697,6 +663,72 @@ namespace nes
       return value;
    }
 
+   Instruction Processor::instruction_from_opcode(Opcode const opcode)
+   {
+      switch (opcode)
+      {
+         case Opcode::BRK_IMPLIED:
+            return brk_implied();
+
+         case Opcode::ORA_X_INDIRECT:
+            return x_indirect(&Processor::ora);
+
+         case Opcode::JAM_IMPLIED_02:
+            return jam_implied();
+
+         // case Opcode::SLO_X_INDIRECT:
+         //    return {};
+
+         // case Opcode::NOP_ZERO_PAGE_04:
+         //    return {};
+
+         case Opcode::ORA_ZERO_PAGE:
+            return zero_page(&Processor::ora);
+
+         case Opcode::ASL_ZERO_PAGE:
+            return zero_page(&Processor::asl);
+
+         case Opcode::ORA_INDIRECT_Y:
+            return indirect_y(&Processor::ora);
+
+         // case Opcode::SLO_ZERO_PAGE:
+         //    return {};
+
+         case Opcode::PHP_IMPLIED:
+            return php_implied();
+
+         case Opcode::ORA_IMMEDIATE:
+            return immediate(&Processor::ora);
+
+         case Opcode::ASL_ACCUMULATOR:
+            return accumulator(&Processor::asl);
+
+         // case Opcode::ANC_IMMEDIATE_0B:
+         //    return {};
+
+         // case Opcode::NOP_ABSOLUTE:
+         //    return {};
+
+         case Opcode::ORA_ABSOLUTE:
+            return absolute(&Processor::ora);
+
+         case Opcode::ASL_ABSOLUTE:
+            return absolute(&Processor::asl);
+
+         // case Opcode::SLO_ABSOLUTE:
+         //    return {};
+
+         case Opcode::BPL_RELATIVE:
+            return relative(&Processor::bpl);
+
+         default:
+            throw UnsupportedOpcode{
+               static_cast<decltype(program_counter)>(program_counter - 1),
+               static_cast<std::underlying_type_t<Opcode>>(opcode)
+            };
+      }
+   }
+
    void Processor::change_processor_status_flag(ProcessorStatusFlag const flag, bool const set)
    {
       auto const underlying_flag{ static_cast<std::underlying_type_t<ProcessorStatusFlag>>(flag) };
@@ -716,6 +748,12 @@ namespace nes
          : processor_status_ &= ~underlying_flags;
    }
 
+   bool Processor::processor_status_flag(ProcessorStatusFlag flag) const
+   {
+      auto const underlying_flag{ static_cast<std::underlying_type_t<ProcessorStatusFlag>>(flag) };
+      return processor_status_ & underlying_flag;
+   }
+
    void Processor::push(Data const value)
    {
       memory_.write(0x0100 + stack_pointer_--, value);
@@ -729,5 +767,33 @@ namespace nes
    Address Processor::assemble_address(Data const low_byte, Data const high_byte)
    {
       return high_byte << 8 | low_byte;
+   }
+
+   std::pair<Address, bool> Processor::add_low_byte(Address const address, Data const value)
+   {
+      auto const before{ address & 0x00FF };
+      auto const after{ before + value & 0x00FF };
+      return { address & 0xFF00 | after, after < before };
+   }
+
+   std::pair<Address, bool> Processor::add_low_byte(Address const address, SignedData const value)
+   {
+      auto const before{ address & 0x00FF };
+      auto const after{ before + value & 0x00FF };
+      return { address & 0xFF00 | after, std::signbit(after - before) not_eq std::signbit(value) };
+   }
+
+   std::pair<Address, bool> Processor::add_high_byte(Address const address, Data const value)
+   {
+      auto const before{ (address & 0xFF00) >> 8 };
+      auto const after{ before + value & 0x00FF };
+      return { after << 8 | address & 0x00FF, after < before };
+   }
+
+   std::pair<Address, bool> Processor::subtract_high_byte(Address const address, Data const value)
+   {
+      auto const before{ (address & 0xFF00) >> 8 };
+      auto const after{ before - value & 0x00FF };
+      return { after << 8 | address & 0x00FF, after > before };
    }
 }

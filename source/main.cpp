@@ -7,19 +7,10 @@
 #include "services/logger/logger.hpp"
 #include "services/visualiser/visualiser.hpp"
 
-void try_invoke(nes::Processor& processor, void(nes::Processor::* const function)()) try
-{
-   std::invoke(function, processor);
-}
-catch (nes::EmulationException const& exception)
-{
-   nes::Locator::get<nes::Logger>()->error(exception.what(), false, exception.location());
-}
-
 void tick_repeatedly(std::stop_token const& stop_token, nes::Processor& processor)
 {
    while (not stop_token.stop_requested())
-      try_invoke(processor, &nes::Processor::tick);
+      processor.tick();
 }
 
 int main(int, char**)
@@ -30,7 +21,8 @@ int main(int, char**)
    nes::Memory memory{};
    nes::Processor processor{ memory };
 
-   memory.write(0x0000, static_cast<nes::Data>(nes::Processor::Opcode::JAM_IMPLIED_02));
+   memory.write(0x0000, static_cast<nes::Data>(nes::Processor::Opcode::BPL_RELATIVE));
+   memory.write(0x0001, 0xF0);
 
    std::jthread emulation_thread{};
    while (visualiser.update(memory, processor))
@@ -46,9 +38,9 @@ int main(int, char**)
          emulation_thread.join();
       }
       else if (visualiser.tick_once())
-         try_invoke(processor, &nes::Processor::tick);
+         processor.tick();
       else if (visualiser.step())
-         try_invoke(processor, &nes::Processor::step);
+         processor.step();
       else if (visualiser.reset())
          processor.reset();
 

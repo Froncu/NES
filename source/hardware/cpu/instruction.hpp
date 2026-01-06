@@ -8,15 +8,7 @@ namespace nes
    class Instruction final
    {
       public:
-         struct promise_type final
-         {
-            static std::suspend_always initial_suspend() noexcept;
-            static std::suspend_always final_suspend() noexcept;
-            static void unhandled_exception();
-            static void return_void();
-
-            Instruction get_return_object();
-         };
+         struct promise_type;
 
          explicit Instruction(std::coroutine_handle<promise_type> handle);
          Instruction(Instruction const&) = delete;
@@ -28,11 +20,24 @@ namespace nes
          Instruction& operator=(Instruction&& other) noexcept;
 
          [[nodiscard]] bool tick() const;
+         [[nodiscard]] std::optional<Instruction>&& prefetched_instruction() const;
 
       private:
          void destroy_handle() const;
 
          std::coroutine_handle<promise_type> handle_;
+   };
+
+   struct Instruction::promise_type
+   {
+      static std::suspend_always initial_suspend() noexcept;
+      static std::suspend_always final_suspend() noexcept;
+      static void unhandled_exception();
+      void return_value(std::optional<Instruction> instruction);
+
+      Instruction get_return_object();
+
+      std::optional<Instruction> prefetched_instruction{};
    };
 }
 

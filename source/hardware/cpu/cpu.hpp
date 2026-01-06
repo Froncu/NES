@@ -9,6 +9,7 @@ namespace nes
 {
    class Processor final
    {
+      using BranchOperation = bool(Processor::*)() const;
       using ReadOperation = void(Processor::*)(Data);
       using ModifyOperation = Data(Processor::*)(Data);
       using WriteOperation = void(Processor::*)(Address);
@@ -310,7 +311,7 @@ namespace nes
          Processor& operator=(Processor const&) = delete;
          Processor& operator=(Processor&&) = delete;
 
-         void tick();
+         bool tick();
          void step();
          void reset();
 
@@ -328,6 +329,8 @@ namespace nes
          [[nodiscard]] Instruction brk_implied();
          [[nodiscard]] Instruction jam_implied();
          [[nodiscard]] Instruction php_implied();
+
+         [[nodiscard]] Instruction relative(BranchOperation operation);
 
          [[nodiscard]] Instruction immediate(ReadOperation operation);
          [[nodiscard]] Instruction absolute(ReadOperation operation);
@@ -352,17 +355,25 @@ namespace nes
          [[nodiscard]] Instruction x_indirect(WriteOperation operation);
          [[nodiscard]] Instruction indirect_y(WriteOperation operation);
 
+         bool bpl() const;
+
          void ora(Data value);
          void lda(Data value);
 
          [[nodiscard]] Data asl(Data value);
 
+         [[nodiscard]] Instruction instruction_from_opcode(Opcode opcode);
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
          void change_processor_status_flags(std::initializer_list<ProcessorStatusFlag> flags, bool set);
+         [[nodiscard]] bool processor_status_flag(ProcessorStatusFlag flag) const;
          void push(Data value);
          [[nodiscard]] Data pop();
 
          [[nodiscard]] static Address assemble_address(Data low_byte, Data high_byte);
+         [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, Data value);
+         [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, SignedData value);
+         [[nodiscard]] static std::pair<Address, bool> add_high_byte(Address address, Data value);
+         [[nodiscard]] static std::pair<Address, bool> subtract_high_byte(Address address, Data value);
 
          Memory& memory_;
 
