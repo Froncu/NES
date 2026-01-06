@@ -51,11 +51,7 @@ int main(int, char**)
          processor.reset();
 
       if (visualiser.load_program_requested())
-      {
-         std::ifstream in{ visualiser.program_path().data(), std::ios::binary };
-         in.read(reinterpret_cast<char*>(&memory[visualiser.program_load_address()]),
-            memory.size() - visualiser.program_load_address());
-      }
+         memory.load_program(visualiser.program_path(), visualiser.program_load_address());
    }
 
    nes::Locator::remove_providers();

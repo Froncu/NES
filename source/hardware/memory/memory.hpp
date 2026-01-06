@@ -17,10 +17,12 @@ namespace nes
 
          Memory& operator=(Memory const&) = delete;
          Memory& operator=(Memory&&) = delete;
-         [[nodiscard]] Data& operator[](Address address);
+
+         void load_program(std::filesystem::path const& path, Address load_address = 0x0000);
 
          void write(Address address, Data data);
          [[nodiscard]] Data read(Address address) const;
+
          [[nodiscard]] std::size_t size() const;
 
       private:

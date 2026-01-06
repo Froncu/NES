@@ -124,6 +124,37 @@ namespace nes
 
                ImGui::InputInt("Bytes per row", &bytes_per_row_, 1, 1);
                ImGui::InputInt("Visible rows", &visible_rows_, 1, 1);
+
+               if (ImGui::Button("Select program"))
+               {
+                  NFD::UniquePath program_path;
+                  std::array constexpr filters{ nfdu8filteritem_t{ "Binaries", "bin" } };
+                  switch (NFD::OpenDialog(program_path, filters.data(), static_cast<nfdfiltersize_t>(filters.size())))
+                  {
+                     case NFD_OKAY:
+                        program_path_ = program_path.get();
+                        break;
+
+                     case NFD_CANCEL:
+                        Locator::get<Logger>()->warning("file selection cancelled");
+                        break;
+
+                     default:
+                        Locator::get<Logger>()->error(std::format("file selection error: {}", NFD::GetError()));
+                        break;
+                  }
+               }
+               if (exists(program_path_))
+               {
+                  ImGui::SameLine();
+                  ImGui::Text(program_path_.filename().string().c_str());
+               }
+
+               ImGui::InputScalar("Load address", ImGuiDataType_U16, &program_load_address_, nullptr, nullptr,
+                  "%04X", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+
+               if (exists(program_path_))
+                  load_program_requested_ = ImGui::Button("Load");
             }
             ImGui::End();
 
@@ -170,41 +201,6 @@ namespace nes
                reset_ = ImGui::Button("Reset");
             }
             ImGui::End();
-
-            ImGui::Begin("Program loader", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
-            {
-               if (ImGui::Button("Select program"))
-               {
-                  NFD::UniquePath program_path;
-                  std::array constexpr filters{ nfdu8filteritem_t{ "Binaries", "bin" } };
-                  switch (NFD::OpenDialog(program_path, filters.data(), static_cast<nfdfiltersize_t>(filters.size())))
-                  {
-                     case NFD_OKAY:
-                        program_path_ = program_path.get();
-                        break;
-
-                     case NFD_CANCEL:
-                        Locator::get<Logger>()->warning("file selection cancelled");
-                        break;
-
-                     default:
-                        Locator::get<Logger>()->error(std::format("file selection error: {}", NFD::GetError()));
-                        break;
-                  }
-               }
-               if (exists(program_path_))
-               {
-                  ImGui::SameLine();
-                  ImGui::Text(program_path_.filename().string().c_str());
-               }
-
-               ImGui::InputScalar("Load address", ImGuiDataType_U16, &program_load_address_, nullptr, nullptr,
-                  "%04X", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
-
-               if (exists(program_path_))
-                  load_program_requested_ = ImGui::Button("Load");
-            }
-            ImGui::End();
          }
       }
       ImGui::Render();
@@ -235,9 +231,9 @@ namespace nes
       return reset_;
    }
 
-   std::wstring_view Visualiser::program_path() const
+   std::filesystem::path const& Visualiser::program_path() const
    {
-      return program_path_.c_str();
+      return program_path_;
    }
 
    Address Visualiser::program_load_address() const

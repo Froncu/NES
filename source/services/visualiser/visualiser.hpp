@@ -57,7 +57,7 @@ namespace nes
          [[nodiscard]] bool step() const;
          [[nodiscard]] bool reset() const;
 
-         [[nodiscard]] std::wstring_view program_path() const;
+         [[nodiscard]] std::filesystem::path const& program_path() const;
          [[nodiscard]] Address program_load_address() const;
          [[nodiscard]] bool load_program_requested() const;
 
@@ -93,16 +93,15 @@ namespace nes
          Address jump_address_{};
          int bytes_per_row_{ 16 };
          int visible_rows_{ 16 };
-
          bool jump_requested_{};
+         std::filesystem::path program_path_{};
+         Address program_load_address_{};
+         bool load_program_requested_{};
+
          bool tick_repeatedly_{};
          bool tick_once_{};
          bool step_{};
          bool reset_{};
-
-         std::filesystem::path program_path_{};
-         Address program_load_address_{};
-         bool load_program_requested_{};
    };
 }
 

@@ -1,8 +1,9 @@
 #include "memory.hpp"
 
-nes::Data& nes::Memory::operator[](Address const address)
+void nes::Memory::load_program(std::filesystem::path const& path, Address const load_address)
 {
-   return data_[address];
+   std::ifstream in{ path.c_str(), std::ios::binary };
+   in.read(reinterpret_cast<char*>(&data_[load_address]), data_.size() - load_address);
 }
 
 void nes::Memory::write(Address const address, Data const data)
