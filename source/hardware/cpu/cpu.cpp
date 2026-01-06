@@ -175,16 +175,16 @@ namespace nes
       std::ignore = memory_.read(program_counter++);
       co_await std::suspend_always{};
 
-      // push PCH on stack (with B flag set), decrement S
+      // push PCH on stack (with B flag set)
       change_processor_status_flag(ProcessorStatusFlag::B, true);
       push(program_counter >> 8 & 0x00FF);
       co_await std::suspend_always{};
 
-      // push PCL on stack, decrement S
+      // push PCL on stack
       push(program_counter & 0x00FF);
       co_await std::suspend_always{};
 
-      // push P on stack, decrement S
+      // push P on stack
       push(processor_status_);
       co_await std::suspend_always{};
 
@@ -209,8 +209,8 @@ namespace nes
       std::ignore = memory_.read(program_counter);
       co_await std::suspend_always{};
 
-      // push register on stack, decrement S
-      change_processor_status_flags({ ProcessorStatusFlag::B, ProcessorStatusFlag::_ }, false);
+      // push P on stack (with B and _ flag set)
+      change_processor_status_flags({ ProcessorStatusFlag::B, ProcessorStatusFlag::_ }, true);
       push(processor_status_);
       co_return;
    }
