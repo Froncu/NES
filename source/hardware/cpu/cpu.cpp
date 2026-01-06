@@ -11,7 +11,7 @@ namespace nes
    void Processor::tick()
    {
       if (not current_instruction_)
-         switch (Opcode const opcode{ memory_.read(program_counter++) })
+         switch (current_opcode_ = static_cast<Opcode>(memory_.read(program_counter++)))
          {
             case Opcode::BRK_IMPLIED:
                current_instruction_ = brk_implied();
@@ -22,6 +22,7 @@ namespace nes
                break;
 
             case Opcode::JAM_IMPLIED_02:
+               current_instruction_ = jam_implied();
                break;
 
             case Opcode::ORA_INDIRECT_Y:
@@ -31,7 +32,7 @@ namespace nes
             default:
                throw UnsupportedOpcode{
                   static_cast<decltype(program_counter)>(program_counter - 1),
-                  static_cast<std::underlying_type_t<Opcode>>(opcode)
+                  static_cast<std::underlying_type_t<Opcode>>(current_opcode_)
                };
          }
       else if (current_instruction_->tick())
@@ -42,14 +43,30 @@ namespace nes
 
    void Processor::step()
    {
-      do
+      tick();
+
+      if (current_opcode_ == Opcode::JAM_IMPLIED_02 or
+         current_opcode_ == Opcode::JAM_IMPLIED_12 or
+         current_opcode_ == Opcode::JAM_IMPLIED_22 or
+         current_opcode_ == Opcode::JAM_IMPLIED_32 or
+         current_opcode_ == Opcode::JAM_IMPLIED_42 or
+         current_opcode_ == Opcode::JAM_IMPLIED_52 or
+         current_opcode_ == Opcode::JAM_IMPLIED_62 or
+         current_opcode_ == Opcode::JAM_IMPLIED_72 or
+         current_opcode_ == Opcode::JAM_IMPLIED_92 or
+         current_opcode_ == Opcode::JAM_IMPLIED_B2 or
+         current_opcode_ == Opcode::JAM_IMPLIED_D2 or
+         current_opcode_ == Opcode::JAM_IMPLIED_F2)
+         return;
+
+      while (current_instruction_)
          tick();
-      while (current_instruction_);
    }
 
    void Processor::reset()
    {
       cycle_ = 0;
+      current_opcode_ = {};
       current_instruction_ = rst_implied();
    }
 
@@ -132,6 +149,12 @@ namespace nes
       // fetch PCH
       program_counter |= memory_.read(0xFFFF) << 8;
       co_return;
+   }
+
+   Instruction Processor::jam_implied()
+   {
+      while (true)
+         co_await std::suspend_always{};
    }
 
    Instruction Processor::immediate(ReadOperation const operation)

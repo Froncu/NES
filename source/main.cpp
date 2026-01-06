@@ -30,6 +30,8 @@ int main(int, char**)
    nes::Memory memory{};
    nes::Processor processor{ memory };
 
+   memory.write(0x0000, static_cast<nes::Data>(nes::Processor::Opcode::JAM_IMPLIED_02));
+
    std::jthread emulation_thread{};
    while (visualiser.update(memory, processor))
    {

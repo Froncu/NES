@@ -326,6 +326,7 @@ namespace nes
       private:
          [[nodiscard]] Instruction rst_implied();
          [[nodiscard]] Instruction brk_implied();
+         [[nodiscard]] Instruction jam_implied();
 
          [[nodiscard]] Instruction immediate(ReadOperation operation);
          [[nodiscard]] Instruction absolute(ReadOperation operation);
@@ -367,6 +368,7 @@ namespace nes
          StackPointer stack_pointer_{ 0xFF };
          ProcessorStatus processor_status_{};
 
+         Opcode current_opcode_{};
          std::optional<Instruction> current_instruction_{ rst_implied() };
    };
 }
