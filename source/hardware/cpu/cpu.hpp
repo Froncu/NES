@@ -325,11 +325,7 @@ namespace nes
          ProgramCounter program_counter{};
 
       private:
-         [[nodiscard]] Instruction rst_implied();
-         [[nodiscard]] Instruction brk_implied();
-         [[nodiscard]] Instruction jam_implied();
-         [[nodiscard]] Instruction php_implied();
-
+         // Addressing modes
          [[nodiscard]] Instruction relative(BranchOperation operation);
 
          [[nodiscard]] Instruction immediate(ReadOperation operation);
@@ -354,14 +350,33 @@ namespace nes
          [[nodiscard]] Instruction absolute_indexed(WriteOperation operation, Index index);
          [[nodiscard]] Instruction x_indirect(WriteOperation operation);
          [[nodiscard]] Instruction indirect_y(WriteOperation operation);
+         // ---
 
+         // Implied instructions
+         [[nodiscard]] Instruction rst_implied();
+         [[nodiscard]] Instruction brk_implied();
+         [[nodiscard]] Instruction jam_implied();
+         [[nodiscard]] Instruction php_implied();
+         [[nodiscard]] Instruction clc_implied();
+         // ---
+
+         // Branch operations
          bool bpl() const;
+         // ---
 
+         // Read operations
          void ora(Data value);
          void lda(Data value);
+         // ---
 
+         // Modify operations
          [[nodiscard]] Data asl(Data value);
+         // ---
 
+         // Write operations
+         // ---
+
+         // Helper functions
          [[nodiscard]] Instruction instruction_from_opcode(Opcode opcode);
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
          void change_processor_status_flags(std::initializer_list<ProcessorStatusFlag> flags, bool set);
@@ -374,6 +389,7 @@ namespace nes
          [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, SignedData value);
          [[nodiscard]] static std::pair<Address, bool> add_high_byte(Address address, Data value);
          [[nodiscard]] static std::pair<Address, bool> subtract_high_byte(Address address, Data value);
+         // ---
 
          Memory& memory_;
 

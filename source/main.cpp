@@ -21,8 +21,8 @@ int main(int, char**)
    nes::Memory memory{};
    nes::Processor processor{ memory };
 
-   memory.write(0x0000, static_cast<nes::Data>(nes::Processor::Opcode::BPL_RELATIVE));
-   memory.write(0x0001, 0xF0);
+   // memory.write(0x0000, static_cast<nes::Data>(nes::Processor::Opcode::BPL_RELATIVE));
+   // memory.write(0x0001, 0xF0);
 
    std::jthread emulation_thread{};
    while (visualiser.update(memory, processor))
