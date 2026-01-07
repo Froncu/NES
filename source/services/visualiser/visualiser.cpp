@@ -2,18 +2,18 @@
 
 namespace nes
 {
-   Visualiser::SDL_Context::SDL_Context()
+   Visualiser::SDL_Context::SDL_Context() noexcept
    {
       bool const succeeded{ SDL_Init(initialisation_flags_) };
       runtime_assert(succeeded, std::format("failed to initialise SDL ({})", SDL_GetError()));
    }
 
-   Visualiser::SDL_Context::~SDL_Context()
+   Visualiser::SDL_Context::~SDL_Context() noexcept
    {
       SDL_QuitSubSystem(initialisation_flags_);
    }
 
-   Visualiser::ImGuiBackend::ImGuiBackend(SDL_Window& window, SDL_Renderer& renderer)
+   Visualiser::ImGuiBackend::ImGuiBackend(SDL_Window& window, SDL_Renderer& renderer) noexcept
    {
       bool succeeded{ ImGui_ImplSDL3_InitForSDLRenderer(&window, &renderer) };
       runtime_assert(succeeded, "failed to initialize ImGui's SDL implementation");
@@ -28,23 +28,23 @@ namespace nes
       input_output.FontGlobalScale = SDL_GetWindowDisplayScale(&window);
    }
 
-   Visualiser::ImGuiBackend::~ImGuiBackend()
+   Visualiser::ImGuiBackend::~ImGuiBackend() noexcept
    {
       ImGui_ImplSDLRenderer3_Shutdown();
       ImGui_ImplSDL3_Shutdown();
    }
 
-   Visualiser::Visualiser()
+   Visualiser::Visualiser() noexcept
    {
       NFD::Init();
    }
 
-   Visualiser::~Visualiser()
+   Visualiser::~Visualiser() noexcept
    {
       NFD::Quit();
    }
 
-   bool Visualiser::update(Memory const& memory, Processor& processor)
+   bool Visualiser::update(Memory const& memory, Processor& processor) noexcept
    {
       SDL_Event event;
       while (SDL_PollEvent(&event))
@@ -211,37 +211,37 @@ namespace nes
       return true;
    }
 
-   bool Visualiser::tick_repeatedly() const
+   bool Visualiser::tick_repeatedly() const noexcept
    {
       return tick_repeatedly_;
    }
 
-   bool Visualiser::tick_once() const
+   bool Visualiser::tick_once() const noexcept
    {
       return tick_once_;
    }
 
-   bool Visualiser::step() const
+   bool Visualiser::step() const noexcept
    {
       return step_;
    }
 
-   bool Visualiser::reset() const
+   bool Visualiser::reset() const noexcept
    {
       return reset_;
    }
 
-   std::filesystem::path const& Visualiser::program_path() const
+   std::filesystem::path const& Visualiser::program_path() const noexcept
    {
       return program_path_;
    }
 
-   Address Visualiser::program_load_address() const
+   Address Visualiser::program_load_address() const noexcept
    {
       return program_load_address_;
    }
 
-   bool Visualiser::load_program_requested() const
+   bool Visualiser::load_program_requested() const noexcept
    {
       return load_program_requested_;
    }

@@ -12,11 +12,11 @@ namespace nes
       class SDL_Context final
       {
          public:
-            SDL_Context();
+            SDL_Context() noexcept;
             SDL_Context(SDL_Context const&) = delete;
             SDL_Context(SDL_Context&&) = delete;
 
-            ~SDL_Context();
+            ~SDL_Context() noexcept;
 
             SDL_Context& operator=(SDL_Context const&) = delete;
             SDL_Context& operator=(SDL_Context&&) = delete;
@@ -28,11 +28,11 @@ namespace nes
       class ImGuiBackend final
       {
          public:
-            ImGuiBackend(SDL_Window& window, SDL_Renderer& renderer);
+            ImGuiBackend(SDL_Window& window, SDL_Renderer& renderer) noexcept;
             ImGuiBackend(ImGuiBackend const&) = delete;
             ImGuiBackend(ImGuiBackend&&) = delete;
 
-            ~ImGuiBackend();
+            ~ImGuiBackend() noexcept;
 
             ImGuiBackend& operator=(ImGuiBackend const&) = delete;
             ImGuiBackend& operator=(ImGuiBackend&&) = delete;
@@ -41,25 +41,25 @@ namespace nes
       };
 
       public:
-         Visualiser();
+         Visualiser() noexcept;
          Visualiser(Visualiser const&) = delete;
          Visualiser(Visualiser&&) = delete;
 
-         ~Visualiser();
+         ~Visualiser() noexcept;
 
          Visualiser& operator=(Visualiser const&) = delete;
          Visualiser& operator=(Visualiser&&) = delete;
 
-         [[nodiscard]] bool update(Memory const& memory, Processor& processor);
+         [[nodiscard]] bool update(Memory const& memory, Processor& processor) noexcept;
 
-         [[nodiscard]] bool tick_repeatedly() const;
-         [[nodiscard]] bool tick_once() const;
-         [[nodiscard]] bool step() const;
-         [[nodiscard]] bool reset() const;
+         [[nodiscard]] bool tick_repeatedly() const noexcept;
+         [[nodiscard]] bool tick_once() const noexcept;
+         [[nodiscard]] bool step() const noexcept;
+         [[nodiscard]] bool reset() const noexcept;
 
-         [[nodiscard]] std::filesystem::path const& program_path() const;
-         [[nodiscard]] Address program_load_address() const;
-         [[nodiscard]] bool load_program_requested() const;
+         [[nodiscard]] std::filesystem::path const& program_path() const noexcept;
+         [[nodiscard]] Address program_load_address() const noexcept;
+         [[nodiscard]] bool load_program_requested() const noexcept;
 
       private:
          SDL_Context const context_ = {};

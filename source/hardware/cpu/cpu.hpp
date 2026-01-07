@@ -9,10 +9,10 @@ namespace nes
 {
    class Processor final
    {
-      using BranchOperation = bool(Processor::*)() const;
-      using ReadOperation = void(Processor::*)(Data);
-      using ModifyOperation = Data(Processor::*)(Data);
-      using WriteOperation = void(Processor::*)(Address);
+      using BranchOperation = bool(Processor::*)() const noexcept;
+      using ReadOperation = void(Processor::*)(Data) noexcept;
+      using ModifyOperation = Data(Processor::*)(Data) noexcept;
+      using WriteOperation = void(Processor::*)(Address) noexcept;
 
       public:
          enum class Opcode : Data
@@ -302,25 +302,25 @@ namespace nes
             N = 0b10000000
          };
 
-         explicit Processor(Memory& memory);
+         explicit Processor(Memory& memory) noexcept;
          Processor(Processor const&) = delete;
          Processor(Processor&&) = delete;
 
-         ~Processor() = default;
+         ~Processor() noexcept = default;
 
          Processor& operator=(Processor const&) = delete;
          Processor& operator=(Processor&&) = delete;
 
          bool tick();
          void step();
-         void reset();
+         void reset() noexcept;
 
-         [[nodiscard]] Cycle cycle() const;
-         [[nodiscard]] Accumulator accumulator() const;
-         [[nodiscard]] Index x() const;
-         [[nodiscard]] Index y() const;
-         [[nodiscard]] StackPointer stack_pointer() const;
-         [[nodiscard]] ProcessorStatus processor_status() const;
+         [[nodiscard]] Cycle cycle() const noexcept;
+         [[nodiscard]] Accumulator accumulator() const noexcept;
+         [[nodiscard]] Index x() const noexcept;
+         [[nodiscard]] Index y() const noexcept;
+         [[nodiscard]] StackPointer stack_pointer() const noexcept;
+         [[nodiscard]] ProcessorStatus processor_status() const noexcept;
 
          ProgramCounter program_counter{};
 
@@ -328,49 +328,49 @@ namespace nes
          // Addressing modes
          [[nodiscard]] Instruction relative(BranchOperation operation);
 
-         [[nodiscard]] Instruction immediate(ReadOperation operation);
-         [[nodiscard]] Instruction absolute(ReadOperation operation);
-         [[nodiscard]] Instruction zero_page(ReadOperation operation);
-         [[nodiscard]] Instruction zero_page_indexed(ReadOperation operation, Index index);
-         [[nodiscard]] Instruction absolute_indexed(ReadOperation operation, Index index);
-         [[nodiscard]] Instruction x_indirect(ReadOperation operation);
-         [[nodiscard]] Instruction indirect_y(ReadOperation operation);
+         [[nodiscard]] Instruction immediate(ReadOperation operation) noexcept;
+         [[nodiscard]] Instruction absolute(ReadOperation operation) noexcept;
+         [[nodiscard]] Instruction zero_page(ReadOperation operation) noexcept;
+         [[nodiscard]] Instruction zero_page_indexed(ReadOperation operation, Index index) noexcept;
+         [[nodiscard]] Instruction absolute_indexed(ReadOperation operation, Index index) noexcept;
+         [[nodiscard]] Instruction x_indirect(ReadOperation operation) noexcept;
+         [[nodiscard]] Instruction indirect_y(ReadOperation operation) noexcept;
 
-         [[nodiscard]] Instruction accumulator(ModifyOperation operation);
-         [[nodiscard]] Instruction absolute(ModifyOperation operation);
-         [[nodiscard]] Instruction zero_page(ModifyOperation operation);
-         [[nodiscard]] Instruction zero_page_indexed(ModifyOperation operation, Index index);
-         [[nodiscard]] Instruction absolute_indexed(ModifyOperation operation, Index index);
-         [[nodiscard]] Instruction x_indirect(ModifyOperation operation);
-         [[nodiscard]] Instruction indirect_y(ModifyOperation operation);
+         [[nodiscard]] Instruction accumulator(ModifyOperation operation) noexcept;
+         [[nodiscard]] Instruction absolute(ModifyOperation operation) noexcept;
+         [[nodiscard]] Instruction zero_page(ModifyOperation operation) noexcept;
+         [[nodiscard]] Instruction zero_page_indexed(ModifyOperation operation, Index index) noexcept;
+         [[nodiscard]] Instruction absolute_indexed(ModifyOperation operation, Index index) noexcept;
+         [[nodiscard]] Instruction x_indirect(ModifyOperation operation) noexcept;
+         [[nodiscard]] Instruction indirect_y(ModifyOperation operation) noexcept;
 
-         [[nodiscard]] Instruction absolute(WriteOperation operation);
-         [[nodiscard]] Instruction zero_page(WriteOperation operation);
-         [[nodiscard]] Instruction zero_page_indexed(WriteOperation operation, Index index);
-         [[nodiscard]] Instruction absolute_indexed(WriteOperation operation, Index index);
-         [[nodiscard]] Instruction x_indirect(WriteOperation operation);
-         [[nodiscard]] Instruction indirect_y(WriteOperation operation);
+         [[nodiscard]] Instruction absolute(WriteOperation operation) noexcept;
+         [[nodiscard]] Instruction zero_page(WriteOperation operation) noexcept;
+         [[nodiscard]] Instruction zero_page_indexed(WriteOperation operation, Index index) noexcept;
+         [[nodiscard]] Instruction absolute_indexed(WriteOperation operation, Index index) noexcept;
+         [[nodiscard]] Instruction x_indirect(WriteOperation operation) noexcept;
+         [[nodiscard]] Instruction indirect_y(WriteOperation operation) noexcept;
          // ---
 
          // Implied instructions
-         [[nodiscard]] Instruction rst_implied();
-         [[nodiscard]] Instruction brk_implied();
-         [[nodiscard]] Instruction jam_implied();
-         [[nodiscard]] Instruction php_implied();
-         [[nodiscard]] Instruction clc_implied();
+         [[nodiscard]] Instruction rst_implied() noexcept;
+         [[nodiscard]] Instruction brk_implied() noexcept;
+         [[nodiscard]] Instruction jam_implied() noexcept;
+         [[nodiscard]] Instruction php_implied() noexcept;
+         [[nodiscard]] Instruction clc_implied() noexcept;
          // ---
 
          // Branch operations
-         bool bpl() const;
+         bool bpl() const noexcept;
          // ---
 
          // Read operations
-         void ora(Data value);
-         void lda(Data value);
+         void ora(Data value) noexcept;
+         void lda(Data value) noexcept;
          // ---
 
          // Modify operations
-         [[nodiscard]] Data asl(Data value);
+         [[nodiscard]] Data asl(Data value) noexcept;
          // ---
 
          // Write operations
@@ -378,17 +378,17 @@ namespace nes
 
          // Helper functions
          [[nodiscard]] Instruction instruction_from_opcode(Opcode opcode);
-         void change_processor_status_flag(ProcessorStatusFlag flag, bool set);
-         void change_processor_status_flags(std::initializer_list<ProcessorStatusFlag> flags, bool set);
-         [[nodiscard]] bool processor_status_flag(ProcessorStatusFlag flag) const;
-         void push(Data value);
-         [[nodiscard]] Data pop();
+         void change_processor_status_flag(ProcessorStatusFlag flag, bool set) noexcept;
+         void change_processor_status_flags(std::initializer_list<ProcessorStatusFlag> flags, bool set) noexcept;
+         [[nodiscard]] bool processor_status_flag(ProcessorStatusFlag flag) const noexcept;
+         void push(Data value) noexcept;
+         [[nodiscard]] Data pop() noexcept;
 
-         [[nodiscard]] static Address assemble_address(Data low_byte, Data high_byte);
-         [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, Data value);
-         [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, SignedData value);
-         [[nodiscard]] static std::pair<Address, bool> add_high_byte(Address address, Data value);
-         [[nodiscard]] static std::pair<Address, bool> subtract_high_byte(Address address, Data value);
+         [[nodiscard]] static Address assemble_address(Data low_byte, Data high_byte) noexcept;
+         [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, Data value) noexcept;
+         [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, SignedData value) noexcept;
+         [[nodiscard]] static std::pair<Address, bool> add_high_byte(Address address, Data value) noexcept;
+         [[nodiscard]] static std::pair<Address, bool> subtract_high_byte(Address address, Data value) noexcept;
          // ---
 
          Memory& memory_;

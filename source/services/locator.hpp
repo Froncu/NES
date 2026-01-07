@@ -16,7 +16,7 @@ namespace nes
       public:
          template <typename Service, std::derived_from<Service> Provider = Service, typename... Arguments>
             requires std::constructible_from<Provider, Arguments...>
-         static Service& provide(Arguments&&... arguments)
+         static Service& provide(Arguments&&... arguments) noexcept
          {
             UniquePointer<void> new_provider{ new Provider{ std::forward<Arguments>(arguments)... }, void_deleter<Provider> };
 
@@ -33,7 +33,7 @@ namespace nes
             return *static_cast<Service*>(current_provider.get());
          }
 
-         static void remove_providers()
+         static void remove_providers() noexcept
          {
             while (not services_.empty())
                services_.pop_back();
@@ -42,7 +42,7 @@ namespace nes
          }
 
          template <typename Service>
-         [[nodiscard]] static Service* get()
+         [[nodiscard]] static Service* get() noexcept
          {
             auto const service_index{ service_indices_.find(type_index<Service>()) };
             if (service_index == service_indices_.end())

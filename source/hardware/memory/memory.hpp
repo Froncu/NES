@@ -9,21 +9,21 @@ namespace nes
    class Memory final
    {
       public:
-         Memory() = default;
+         Memory() noexcept = default;
          Memory(Memory const&) = delete;
          Memory(Memory&&) = delete;
 
-         ~Memory() = default;
+         ~Memory() noexcept = default;
 
          Memory& operator=(Memory const&) = delete;
          Memory& operator=(Memory&&) = delete;
 
-         void load_program(std::filesystem::path const& path, Address load_address = 0x0000);
+         void load_program(std::filesystem::path const& path, Address load_address = 0x0000) noexcept;
 
-         void write(Address address, Data data);
-         [[nodiscard]] Data read(Address address) const;
+         void write(Address address, Data data) noexcept;
+         [[nodiscard]] Data read(Address address) const noexcept;
 
-         [[nodiscard]] std::size_t size() const;
+         [[nodiscard]] std::size_t size() const noexcept;
 
       private:
          std::array<Data, std::numeric_limits<ProgramCounter>::max() + 1> data_{};

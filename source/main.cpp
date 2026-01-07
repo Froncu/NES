@@ -7,10 +7,34 @@
 #include "services/logger/logger.hpp"
 #include "services/visualiser/visualiser.hpp"
 
+void handle_exception(nes::UnsupportedOpcode const& exception,
+   std::source_location source_location = std::source_location::current())
+{
+   nes::Locator::get<nes::Logger>()->error(exception.what(), false, std::move(source_location));
+}
+
+void try_tick(nes::Processor& processor) try
+{
+   processor.tick();
+}
+catch (nes::UnsupportedOpcode const& exception)
+{
+   handle_exception(exception);
+}
+
+void try_step(nes::Processor& processor) try
+{
+   processor.step();
+}
+catch (nes::UnsupportedOpcode const& exception)
+{
+   handle_exception(exception);
+}
+
 void tick_repeatedly(std::stop_token const& stop_token, nes::Processor& processor)
 {
    while (not stop_token.stop_requested())
-      processor.tick();
+      try_tick(processor);
 }
 
 int main(int, char**)
@@ -20,11 +44,10 @@ int main(int, char**)
 
    nes::Memory memory{};
    nes::Processor processor{ memory };
-
-   // memory.write(0x0000, static_cast<nes::Data>(nes::Processor::Opcode::BPL_RELATIVE));
-   // memory.write(0x0001, 0xF0);
-
    std::jthread emulation_thread{};
+
+   memory.write(0x0000, 0xff);
+
    while (visualiser.update(memory, processor))
    {
       if (visualiser.tick_repeatedly())
@@ -38,9 +61,9 @@ int main(int, char**)
          emulation_thread.join();
       }
       else if (visualiser.tick_once())
-         processor.tick();
+         try_tick(processor);
       else if (visualiser.step())
-         processor.step();
+         try_step(processor);
       else if (visualiser.reset())
          processor.reset();
 
