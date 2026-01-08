@@ -2,28 +2,26 @@
    "version" : 3,
    "configurePresets" : [
       {
-         "name" : "base",
-         "hidden" : true,
-         "binaryDir" : "${sourceDir}/build/${presetName}",
+         "name" : "default",
+         "generator" : "Ninja Multi-Config",
+         "binaryDir" : "${sourceDir}/build",
          "cacheVariables" : {
             "CMAKE_TOOLCHAIN_FILE" : "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "VCPKG_MANIFEST_DIR" : "${sourceDir}",
-            "VCPKG_DEFAULT_STATIC" : true
+            "VCPKG_LIBRARY_LINKAGE" : "static"
          }
-      },
+      }
+   ],
+   "buildPresets" : [
       {
-         "inherits" : "base",
          "name" : "debug",
-         "cacheVariables" : {
-            "CMAKE_BUILD_TYPE" : "Debug"
-         }
+         "configurePreset" : "default",
+         "configuration" : "Debug"
       },
       {
-         "inherits" : "base",
          "name" : "release",
-         "cacheVariables" : {
-            "CMAKE_BUILD_TYPE" : "Release"
-         }
+         "configurePreset" : "default",
+         "configuration" : "Release"
       }
    ]
 }
