@@ -353,23 +353,25 @@ namespace nes
          // ---
 
          // Implied instructions
-         [[nodiscard]] Instruction rst_implied() noexcept;
-         [[nodiscard]] Instruction brk_implied() noexcept;
-         [[nodiscard]] Instruction php_implied() noexcept;
-         [[nodiscard]] Instruction clc_implied() noexcept;
+         [[nodiscard]] Instruction RST() noexcept;
+         [[nodiscard]] Instruction BRK() noexcept;
+         [[nodiscard]] Instruction PHP() noexcept;
+         [[nodiscard]] Instruction CLC() noexcept;
+         [[nodiscard]] Instruction JSR() noexcept;
          // ---
 
          // Branch operations
-         bool bpl() const noexcept;
+         bool BPL() const noexcept;
          // ---
 
          // Read operations
-         void ora(Data value) noexcept;
-         void lda(Data value) noexcept;
+         void ORA(Data value) noexcept;
+         void LDA(Data value) noexcept;
+         void AND(Data value) noexcept;
          // ---
 
          // Modify operations
-         [[nodiscard]] Data asl(Data value) noexcept;
+         [[nodiscard]] Data ASL(Data value) noexcept;
          // ---
 
          // Write operations
@@ -400,7 +402,7 @@ namespace nes
          ProcessorStatus processor_status_{};
 
          Opcode current_opcode_{};
-         std::optional<Instruction> current_instruction_{ rst_implied() };
+         std::optional<Instruction> current_instruction_{ RST() };
    };
 }
 

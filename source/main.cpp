@@ -46,6 +46,10 @@ int main(int, char**)
    nes::Processor processor{ memory };
    std::jthread emulation_thread{};
 
+   memory.write(0x0000, static_cast<nes::Data>(nes::Processor::Opcode::JSR_ABSOLUTE));
+   memory.write(0x0001, 0x12);
+   memory.write(0x0002, 0x34);
+
    while (visualiser.update(memory, processor))
    {
       if (visualiser.tick_repeatedly())

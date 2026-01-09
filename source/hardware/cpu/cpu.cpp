@@ -37,7 +37,7 @@ namespace nes
    {
       cycle_ = 0;
       current_opcode_ = {};
-      current_instruction_ = rst_implied();
+      current_instruction_ = RST();
    }
 
    Cycle Processor::cycle() const noexcept
@@ -71,7 +71,7 @@ namespace nes
    }
 
    // TODO: find what exactly happens here
-   Instruction Processor::rst_implied() noexcept
+   Instruction Processor::RST() noexcept
    {
       co_await std::suspend_always{};
 
@@ -93,7 +93,7 @@ namespace nes
       co_return std::nullopt;
    }
 
-   Instruction Processor::brk_implied() noexcept
+   Instruction Processor::BRK() noexcept
    {
       // read next instruction byte (and throw it away), increment PC
       std::ignore = memory_.read(program_counter++);
@@ -121,7 +121,7 @@ namespace nes
       co_return std::nullopt;
    }
 
-   Instruction Processor::php_implied() noexcept
+   Instruction Processor::PHP() noexcept
    {
       // read next instruction byte (and throw it away)
       std::ignore = memory_.read(program_counter);
@@ -133,9 +133,31 @@ namespace nes
       co_return std::nullopt;
    }
 
-   Instruction Processor::clc_implied() noexcept
+   Instruction Processor::CLC() noexcept
    {
       change_processor_status_flag(ProcessorStatusFlag::C, false);
+      co_return std::nullopt;
+   }
+
+   Instruction Processor::JSR() noexcept
+   {
+      // fetch low address byte, increment PC
+      Data const low_address_byte{ memory_.read(program_counter++) };
+      co_await std::suspend_always{};
+
+      // internal operation (pre-decrement S?)
+      co_await std::suspend_always{};
+
+      // push PCH on stack
+      push(program_counter >> 8 & 0x00FF);
+      co_await std::suspend_always{};
+
+      // push PCL on stack
+      push(program_counter & 0x00FF);
+      co_await std::suspend_always{};
+
+      // copy low address byte to PCL, fetch high address byte to PCH
+      program_counter = memory_.read(program_counter) << 8 | low_address_byte;
       co_return std::nullopt;
    }
 
@@ -600,12 +622,12 @@ namespace nes
       co_return std::nullopt;
    }
 
-   bool Processor::bpl() const noexcept
+   bool Processor::BPL() const noexcept
    {
       return not processor_status_flag(ProcessorStatusFlag::N);
    }
 
-   void Processor::ora(Data const value) noexcept
+   void Processor::ORA(Data const value) noexcept
    {
       // ORA value with accumulator
       accumulator_ |= value;
@@ -617,7 +639,7 @@ namespace nes
       change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b1000'0000);
    }
 
-   void Processor::lda(Data const value) noexcept
+   void Processor::LDA(Data const value) noexcept
    {
       // load value into accumulator
       accumulator_ = value;
@@ -629,7 +651,19 @@ namespace nes
       change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b1000'0000);
    }
 
-   Data Processor::asl(Data value) noexcept
+   void Processor::AND(Data const value) noexcept
+   {
+      // AND value with accumulator
+      accumulator_ &= value;
+
+      // Z set if the accumulator is zero after AND
+      change_processor_status_flag(ProcessorStatusFlag::Z, not accumulator_);
+
+      // N set if bit 7 of the accumulator is set after AND
+      change_processor_status_flag(ProcessorStatusFlag::N, accumulator_ & 0b1000'0000);
+   }
+
+   Data Processor::ASL(Data value) noexcept
    {
       // C set to bit 7 of value before ASL
       change_processor_status_flag(ProcessorStatusFlag::C, value & 0b1000'0000);
@@ -651,10 +685,10 @@ namespace nes
       switch (opcode)
       {
          case Opcode::BRK_IMPLIED:
-            return brk_implied();
+            return BRK();
 
          case Opcode::ORA_X_INDIRECT:
-            return x_indirect(&Processor::ora);
+            return x_indirect(&Processor::ORA);
 
          case Opcode::JAM_IMPLIED_02:
             return Instruction{ {} };
@@ -666,22 +700,22 @@ namespace nes
             return Instruction{ {} };
 
          case Opcode::ORA_ZERO_PAGE:
-            return zero_page(&Processor::ora);
+            return zero_page(&Processor::ORA);
 
          case Opcode::ASL_ZERO_PAGE:
-            return zero_page(&Processor::asl);
+            return zero_page(&Processor::ASL);
 
          case Opcode::SLO_ZERO_PAGE:
             return Instruction{ {} };
 
          case Opcode::PHP_IMPLIED:
-            return php_implied();
+            return PHP();
 
          case Opcode::ORA_IMMEDIATE:
-            return immediate(&Processor::ora);
+            return immediate(&Processor::ORA);
 
          case Opcode::ASL_ACCUMULATOR:
-            return accumulator(&Processor::asl);
+            return accumulator(&Processor::ASL);
 
          case Opcode::ANC_IMMEDIATE_0B:
             return Instruction{ {} };
@@ -690,19 +724,19 @@ namespace nes
             return Instruction{ {} };
 
          case Opcode::ORA_ABSOLUTE:
-            return absolute(&Processor::ora);
+            return absolute(&Processor::ORA);
 
          case Opcode::ASL_ABSOLUTE:
-            return absolute(&Processor::asl);
+            return absolute(&Processor::ASL);
 
          case Opcode::SLO_ABSOLUTE:
             return Instruction{ {} };
 
          case Opcode::BPL_RELATIVE:
-            return relative(&Processor::bpl);
+            return relative(&Processor::BPL);
 
          case Opcode::ORA_INDIRECT_Y:
-            return indirect_y(&Processor::ora);
+            return indirect_y(&Processor::ORA);
 
          case Opcode::JAM_IMPLIED_12:
             return Instruction{ {} };
@@ -714,19 +748,19 @@ namespace nes
             return Instruction{ {} };
 
          case Opcode::ORA_ZERO_PAGE_X:
-            return zero_page_indexed(&Processor::ora, x_);
+            return zero_page_indexed(&Processor::ORA, x_);
 
          case Opcode::ASL_ZERO_PAGE_X:
-            return zero_page_indexed(&Processor::asl, x_);
+            return zero_page_indexed(&Processor::ASL, x_);
 
          case Opcode::SLO_ZERO_PAGE_X:
             return Instruction{ {} };
 
          case Opcode::CLC_IMPLIED:
-            return clc_implied();
+            return CLC();
 
          case Opcode::ORA_ABSOLUTE_Y:
-            return absolute_indexed(&Processor::ora, y_);
+            return absolute_indexed(&Processor::ORA, y_);
 
          case Opcode::NOP_IMPLIED_1A:
             return Instruction{ {} };
@@ -738,13 +772,19 @@ namespace nes
             return Instruction{ {} };
 
          case Opcode::ORA_ABSOLUTE_X:
-            return absolute_indexed(&Processor::ora, x_);
+            return absolute_indexed(&Processor::ORA, x_);
 
          case Opcode::ASL_ABSOLUTE_X:
-            return absolute_indexed(&Processor::asl, x_);
+            return absolute_indexed(&Processor::ASL, x_);
 
          case Opcode::SLO_ABSOLUTE_X:
             return Instruction{ {} };
+
+         case Opcode::JSR_ABSOLUTE:
+            return JSR();
+
+         case Opcode::AND_X_INDIRECT:
+            return x_indirect(&Processor::AND);
 
          default:
             throw UnsupportedOpcode{
