@@ -46,8 +46,6 @@ int main(int, char**)
    nes::Processor processor{ memory };
    std::jthread emulation_thread{};
 
-   memory.write(0x0000, 0xff);
-
    while (visualiser.update(memory, processor))
    {
       if (visualiser.tick_repeatedly())

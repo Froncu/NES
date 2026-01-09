@@ -30,22 +30,6 @@ namespace nes
 
    void Processor::step()
    {
-      tick();
-
-      if (current_opcode_ == Opcode::JAM_IMPLIED_02 or
-         current_opcode_ == Opcode::JAM_IMPLIED_12 or
-         current_opcode_ == Opcode::JAM_IMPLIED_22 or
-         current_opcode_ == Opcode::JAM_IMPLIED_32 or
-         current_opcode_ == Opcode::JAM_IMPLIED_42 or
-         current_opcode_ == Opcode::JAM_IMPLIED_52 or
-         current_opcode_ == Opcode::JAM_IMPLIED_62 or
-         current_opcode_ == Opcode::JAM_IMPLIED_72 or
-         current_opcode_ == Opcode::JAM_IMPLIED_92 or
-         current_opcode_ == Opcode::JAM_IMPLIED_B2 or
-         current_opcode_ == Opcode::JAM_IMPLIED_D2 or
-         current_opcode_ == Opcode::JAM_IMPLIED_F2)
-         return;
-
       while (not tick());
    }
 
@@ -134,14 +118,6 @@ namespace nes
 
       // fetch PCH
       program_counter |= memory_.read(0xFFFF) << 8;
-      co_return std::nullopt;
-   }
-
-   Instruction Processor::jam_implied() noexcept
-   {
-      while (true)
-         co_await std::suspend_always{};
-
       co_return std::nullopt;
    }
 
@@ -681,7 +657,7 @@ namespace nes
             return x_indirect(&Processor::ora);
 
          case Opcode::JAM_IMPLIED_02:
-            return jam_implied();
+            return Instruction{ {} };
 
          case Opcode::SLO_X_INDIRECT:
             return Instruction{ {} };
@@ -729,7 +705,7 @@ namespace nes
             return indirect_y(&Processor::ora);
 
          case Opcode::JAM_IMPLIED_12:
-            return jam_implied();
+            return Instruction{ {} };
 
          case Opcode::SLO_INDIRECT_Y:
             return Instruction{ {} };

@@ -355,7 +355,6 @@ namespace nes
          // Implied instructions
          [[nodiscard]] Instruction rst_implied() noexcept;
          [[nodiscard]] Instruction brk_implied() noexcept;
-         [[nodiscard]] Instruction jam_implied() noexcept;
          [[nodiscard]] Instruction php_implied() noexcept;
          [[nodiscard]] Instruction clc_implied() noexcept;
          // ---
