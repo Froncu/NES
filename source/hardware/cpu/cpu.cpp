@@ -547,10 +547,10 @@ namespace nes
       --stack_pointer_;
       co_await std::suspend_always{};
 
-      program_counter = memory_.read(0xFFFC);
+      program_counter = program_counter & 0xFF00 | memory_.read(0xFFFC);
       co_await std::suspend_always{};
 
-      program_counter |= memory_.read(0xFFFD) << 8;
+      program_counter = memory_.read(0xFFFD) << 8 | program_counter & 0x00FF;
       co_return std::nullopt;
    }
 
@@ -574,11 +574,11 @@ namespace nes
       co_await std::suspend_always{};
 
       // fetch PCL
-      program_counter = memory_.read(0xFFFE);
+      program_counter = program_counter & 0xFF00 | memory_.read(0xFFFE);
       co_await std::suspend_always{};
 
       // fetch PCH
-      program_counter |= memory_.read(0xFFFF) << 8;
+      program_counter = memory_.read(0xFFFF) << 8 | program_counter & 0x00FF;
       co_return std::nullopt;
    }
 
@@ -619,7 +619,7 @@ namespace nes
       co_await std::suspend_always{};
 
       // copy low address byte to PCL, fetch high address byte to PCH
-      program_counter = memory_.read(program_counter) << 8 | low_address_byte;
+      program_counter = assemble_address(low_address_byte, memory_.read(program_counter));
       co_return std::nullopt;
    }
 
@@ -687,7 +687,7 @@ namespace nes
       co_await std::suspend_always{};
 
       // copy low address byte to PCL, fetch high address byte to PCH
-      program_counter = assemble_address(low_address_byte, memory_.read(program_counter++));
+      program_counter = assemble_address(low_address_byte, memory_.read(program_counter));
       co_return std::nullopt;
    }
 
