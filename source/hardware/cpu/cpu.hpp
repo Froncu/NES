@@ -12,7 +12,7 @@ namespace nes
       using BranchOperation = bool(Processor::*)() const noexcept;
       using ReadOperation = void(Processor::*)(Data) noexcept;
       using ModifyOperation = Data(Processor::*)(Data) noexcept;
-      using WriteOperation = void(Processor::*)(Address) noexcept;
+      using WriteOperation = Data(Processor::*)() noexcept;
 
       public:
          enum class Opcode : Data
@@ -130,7 +130,7 @@ namespace nes
             PLA_IMPLIED      = 0x68,
             ADC_IMMEDIATE    = 0x69,
             ROR_ACCUMULATOR  = 0x6A,
-            ARR_IMMEDIATE_6B = 0x6B,
+            ARR_IMMEDIATE    = 0x6B,
             JMP_INDIRECT     = 0x6C,
             ADC_ABSOLUTE     = 0x6D,
             ROR_ABSOLUTE     = 0x6E,
@@ -250,7 +250,7 @@ namespace nes
             CMP_ABSOLUTE_Y     = 0xD9,
             NOP_IMPLIED_DA     = 0xDA,
             DCP_ABSOLUTE_Y     = 0xDB,
-            NOP_ABSOLUTE_X_DB  = 0xDC,
+            NOP_ABSOLUTE_X_DC  = 0xDC,
             CMP_ABSOLUTE_X     = 0xDD,
             DEC_ABSOLUTE_X     = 0xDE,
             DCP_ABSOLUTE_X     = 0xDF,
@@ -358,23 +358,71 @@ namespace nes
          [[nodiscard]] Instruction PHP() noexcept;
          [[nodiscard]] Instruction CLC() noexcept;
          [[nodiscard]] Instruction JSR() noexcept;
+         [[nodiscard]] Instruction PLP() noexcept;
+         [[nodiscard]] Instruction SEC() noexcept;
+         [[nodiscard]] Instruction RTI() noexcept;
+         [[nodiscard]] Instruction PHA() noexcept;
+         [[nodiscard]] Instruction JMP_absolute() noexcept;
+         [[nodiscard]] Instruction CLI() noexcept;
+         [[nodiscard]] Instruction RTS() noexcept;
+         [[nodiscard]] Instruction PLA() noexcept;
+         [[nodiscard]] Instruction JMP_indirect() noexcept;
+         [[nodiscard]] Instruction SEI() noexcept;
+         [[nodiscard]] Instruction DEY() noexcept;
+         [[nodiscard]] Instruction TXA() noexcept;
+         [[nodiscard]] Instruction TYA() noexcept;
+         [[nodiscard]] Instruction TXS() noexcept;
+         [[nodiscard]] Instruction TAY() noexcept;
+         [[nodiscard]] Instruction TAX() noexcept;
+         [[nodiscard]] Instruction CLV() noexcept;
+         [[nodiscard]] Instruction TSX() noexcept;
+         [[nodiscard]] Instruction INY() noexcept;
+         [[nodiscard]] Instruction DEX() noexcept;
+         [[nodiscard]] Instruction CLD() noexcept;
+         [[nodiscard]] Instruction INX() noexcept;
+         [[nodiscard]] Instruction NOP() noexcept;
+         [[nodiscard]] Instruction SED() noexcept;
          // ---
 
          // Branch operations
          bool BPL() const noexcept;
+         bool BMI() const noexcept;
+         bool BVC() const noexcept;
+         bool BVS() const noexcept;
+         bool BCC() const noexcept;
+         bool BCS() const noexcept;
+         bool BNE() const noexcept;
+         bool BEQ() const noexcept;
          // ---
 
          // Read operations
          void ORA(Data value) noexcept;
          void LDA(Data value) noexcept;
          void AND(Data value) noexcept;
+         void BIT(Data value) noexcept;
+         void EOR(Data value) noexcept;
+         void ADC(Data value) noexcept;
+         void LDY(Data value) noexcept;
+         void LDX(Data value) noexcept;
+         void CPY(Data value) noexcept;
+         void CMP(Data value) noexcept;
+         void CPX(Data value) noexcept;
+         void SBC(Data value) noexcept;
          // ---
 
          // Modify operations
          [[nodiscard]] Data ASL(Data value) noexcept;
+         [[nodiscard]] Data ROL(Data value) noexcept;
+         [[nodiscard]] Data LSR(Data value) noexcept;
+         [[nodiscard]] Data ROR(Data value) noexcept;
+         [[nodiscard]] Data DEC(Data value) noexcept;
+         [[nodiscard]] Data INC(Data value) noexcept;
          // ---
 
          // Write operations
+         Data STA() noexcept;
+         Data STY() noexcept;
+         Data STX() noexcept;
          // ---
 
          // Helper functions
