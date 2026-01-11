@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.1)
-project(NES)
+project(FroNES)
 
 file(GLOB_RECURSE SOURCES source/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
