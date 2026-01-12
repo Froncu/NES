@@ -292,14 +292,14 @@ namespace nes
 
          enum class ProcessorStatusFlag : ProcessorStatus
          {
-            C = 0b00000001,
-            Z = 0b00000010,
-            I = 0b00000100,
-            D = 0b00001000,
-            B = 0b00010000,
-            _ = 0b00100000,
-            V = 0b01000000,
-            N = 0b10000000
+            C = 0b00'00'00'01,
+            Z = 0b00'00'00'10,
+            I = 0b00'00'01'00,
+            D = 0b00'00'10'00,
+            B = 0b00'01'00'00,
+            _ = 0b00'10'00'00,
+            V = 0b01'00'00'00,
+            N = 0b10'00'00'00
          };
 
          explicit Processor(Memory& memory) noexcept;
@@ -427,13 +427,16 @@ namespace nes
 
          // Helper functions
          [[nodiscard]] Instruction instruction_from_opcode(Opcode opcode);
+
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set) noexcept;
          void change_processor_status_flags(std::initializer_list<ProcessorStatusFlag> flags, bool set) noexcept;
          [[nodiscard]] bool processor_status_flag(ProcessorStatusFlag flag) const noexcept;
+         void update_zero_and_negative_flag(Data value) noexcept;
+
          void push(Data value) noexcept;
          [[nodiscard]] Data pop() noexcept;
 
-         [[nodiscard]] static Address assemble_address(Data low_byte, Data high_byte) noexcept;
+         [[nodiscard]] static Address assemble_address(Data high_byte, Data low_byte) noexcept;
          [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, Data value) noexcept;
          [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, SignedData value) noexcept;
          [[nodiscard]] static std::pair<Address, bool> add_high_byte(Address address, Data value) noexcept;
