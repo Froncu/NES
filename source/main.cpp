@@ -31,7 +31,7 @@ catch (nes::UnsupportedOpcode const& exception)
    handle_exception(exception);
 }
 
-void tick_repeatedly(std::stop_token const& stop_token, nes::Processor& processor)
+void try_tick_repeatedly(std::stop_token const& stop_token, nes::Processor& processor)
 {
    while (not stop_token.stop_requested())
       try_tick(processor);
@@ -51,7 +51,7 @@ int main(int, char**)
       if (visualiser.tick_repeatedly())
       {
          if (not emulation_thread.joinable())
-            emulation_thread = std::jthread{ tick_repeatedly, std::ref(processor) };
+            emulation_thread = std::jthread{ try_tick_repeatedly, std::ref(processor) };
       }
       else if (emulation_thread.joinable())
       {
