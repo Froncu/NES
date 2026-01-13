@@ -1,8 +1,8 @@
 #include <SDL3/SDL_main.h>
 
 #include "exceptions/unsupported_opcode.hpp"
-#include "hardware/cpu/cpu.hpp"
 #include "hardware/memory/memory.hpp"
+#include "hardware/processor/processor.hpp"
 #include "services/locator.hpp"
 #include "services/logger/logger.hpp"
 #include "services/visualiser/visualiser.hpp"

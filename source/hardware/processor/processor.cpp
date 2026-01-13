@@ -1,4 +1,4 @@
-#include "cpu.hpp"
+#include "processor.hpp"
 #include "exceptions/unsupported_opcode.hpp"
 
 namespace nes

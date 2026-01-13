@@ -1,5 +1,5 @@
-#ifndef CPU_HPP
-#define CPU_HPP
+#ifndef PROCESSOR_HPP
+#define PROCESSOR_HPP
 
 #include "hardware/memory/memory.hpp"
 #include "instruction.hpp"

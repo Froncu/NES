@@ -1,7 +1,7 @@
 #ifndef VISUALISER_HPP
 #define VISUALISER_HPP
 
-#include "hardware/cpu/cpu.hpp"
+#include "hardware/processor/processor.hpp"
 #include "pch.hpp"
 #include "utility/runtime_assert.hpp"
 
