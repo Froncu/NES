@@ -79,7 +79,7 @@ namespace nes
                   {
                      if (jump_requested_)
                      {
-                        jump_address_ = std::clamp(jump_address_, {}, static_cast<Address>(memory.size() - 1));
+                        jump_address_ = std::clamp(jump_address_, {}, static_cast<Word>(memory.size() - 1));
                         float const target_row{ jump_address_ / bytes_per_row_ - visible_rows_ / 2.0f + 0.5f };
                         ImGui::SetScrollY(target_row * item_height);
                      }
@@ -97,7 +97,7 @@ namespace nes
 
                            for (int column_index{ base_column_index }; column_index < max_column_index; ++column_index)
                            {
-                              Data const byte{ memory.read(static_cast<Address>(column_index)) };
+                              Byte const byte{ memory.read(static_cast<Word>(column_index)) };
                               if (not byte)
                                  ImGui::PushStyleColor(ImGuiCol_Text, { 0.5f, 0.5f, 0.5f, 1.0f });
 
@@ -236,7 +236,7 @@ namespace nes
       return program_path_;
    }
 
-   Address Visualiser::program_load_address() const noexcept
+   Word Visualiser::program_load_address() const noexcept
    {
       return program_load_address_;
    }

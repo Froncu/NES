@@ -18,15 +18,15 @@ namespace nes
          Memory& operator=(Memory const&) = delete;
          Memory& operator=(Memory&&) = delete;
 
-         void load_program(std::filesystem::path const& path, Address load_address = 0x0000) noexcept;
+         void load_program(std::filesystem::path const& path, Word load_address = 0x0000) noexcept;
 
-         void write(Address address, Data data) noexcept;
-         [[nodiscard]] Data read(Address address) const noexcept;
+         void write(Word address, Byte data) noexcept;
+         [[nodiscard]] Byte read(Word address) const noexcept;
 
          [[nodiscard]] std::size_t size() const noexcept;
 
       private:
-         std::array<Data, std::numeric_limits<ProgramCounter>::max() + 1> data_{};
+         std::array<Byte, std::numeric_limits<ProgramCounter>::max() + 1> data_{};
    };
 }
 

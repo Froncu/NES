@@ -58,7 +58,7 @@ namespace nes
          [[nodiscard]] bool reset() const noexcept;
 
          [[nodiscard]] std::filesystem::path const& program_path() const noexcept;
-         [[nodiscard]] Address program_load_address() const noexcept;
+         [[nodiscard]] Word program_load_address() const noexcept;
          [[nodiscard]] bool load_program_requested() const noexcept;
 
       private:
@@ -90,12 +90,12 @@ namespace nes
 
          ImGuiBackend const imgui_backend_{ *window_, *renderer_ };
 
-         Address jump_address_{};
+         Word jump_address_{};
          int bytes_per_row_{ 16 };
          int visible_rows_{ 16 };
          bool jump_requested_{};
          std::filesystem::path program_path_{};
-         Address program_load_address_{};
+         Word program_load_address_{};
          bool load_program_requested_{};
 
          bool tick_repeatedly_{};

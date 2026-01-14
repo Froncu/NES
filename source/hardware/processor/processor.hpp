@@ -10,12 +10,12 @@ namespace nes
    class Processor final
    {
       using BranchOperation = bool(Processor::*)() const noexcept;
-      using ReadOperation = void(Processor::*)(Data) noexcept;
-      using ModifyOperation = Data(Processor::*)(Data) noexcept;
-      using WriteOperation = Data(Processor::*)() noexcept;
+      using ReadOperation = void(Processor::*)(Byte) noexcept;
+      using ModifyOperation = Byte(Processor::*)(Byte) noexcept;
+      using WriteOperation = Byte(Processor::*)() noexcept;
 
       public:
-         enum class Opcode : Data
+         enum class Opcode : Byte
          {
             BRK_IMPLIED      = 0x00,
             ORA_X_INDIRECT   = 0x01,
@@ -302,6 +302,13 @@ namespace nes
             N = 0b10'00'00'00
          };
 
+         static Word constexpr NMI_LOW{ 0xFF'FA };
+         static Word constexpr NMI_HIGH{ NMI_LOW + 1 };
+         static Word constexpr RESET_LOW{ 0xFF'FC };
+         static Word constexpr RESET_HIGH{ RESET_LOW + 1 };
+         static Word constexpr IRQ_LOW{ 0xFF'FE };
+         static Word constexpr IRQ_HIGH{ IRQ_LOW + 1 };
+
          explicit Processor(Memory& memory) noexcept;
          Processor(Processor const&) = delete;
          Processor(Processor&&) = delete;
@@ -312,7 +319,6 @@ namespace nes
          Processor& operator=(Processor&&) = delete;
 
          bool tick();
-         void step();
          void reset() noexcept;
 
          [[nodiscard]] Cycle cycle() const noexcept;
@@ -396,51 +402,52 @@ namespace nes
          // ---
 
          // Read operations
-         void ORA(Data value) noexcept;
-         void LDA(Data value) noexcept;
-         void AND(Data value) noexcept;
-         void BIT(Data value) noexcept;
-         void EOR(Data value) noexcept;
-         void ADC(Data value) noexcept;
-         void LDY(Data value) noexcept;
-         void LDX(Data value) noexcept;
-         void CPY(Data value) noexcept;
-         void CMP(Data value) noexcept;
-         void CPX(Data value) noexcept;
-         void SBC(Data value) noexcept;
+         void ORA(Byte value) noexcept;
+         void LDA(Byte value) noexcept;
+         void AND(Byte value) noexcept;
+         void BIT(Byte value) noexcept;
+         void EOR(Byte value) noexcept;
+         void ADC(Byte value) noexcept;
+         void LDY(Byte value) noexcept;
+         void LDX(Byte value) noexcept;
+         void CPY(Byte value) noexcept;
+         void CMP(Byte value) noexcept;
+         void CPX(Byte value) noexcept;
+         void SBC(Byte value) noexcept;
          // ---
 
          // Modify operations
-         [[nodiscard]] Data ASL(Data value) noexcept;
-         [[nodiscard]] Data ROL(Data value) noexcept;
-         [[nodiscard]] Data LSR(Data value) noexcept;
-         [[nodiscard]] Data ROR(Data value) noexcept;
-         [[nodiscard]] Data DEC(Data value) noexcept;
-         [[nodiscard]] Data INC(Data value) noexcept;
+         [[nodiscard]] Byte ASL(Byte value) noexcept;
+         [[nodiscard]] Byte ROL(Byte value) noexcept;
+         [[nodiscard]] Byte LSR(Byte value) noexcept;
+         [[nodiscard]] Byte ROR(Byte value) noexcept;
+         [[nodiscard]] Byte DEC(Byte value) noexcept;
+         [[nodiscard]] Byte INC(Byte value) noexcept;
          // ---
 
          // Write operations
-         Data STA() noexcept;
-         Data STY() noexcept;
-         Data STX() noexcept;
+         Byte STA() noexcept;
+         Byte STY() noexcept;
+         Byte STX() noexcept;
          // ---
 
          // Helper functions
          [[nodiscard]] Instruction instruction_from_opcode(Opcode opcode);
 
          void change_processor_status_flag(ProcessorStatusFlag flag, bool set) noexcept;
-         void change_processor_status_flags(std::initializer_list<ProcessorStatusFlag> flags, bool set) noexcept;
          [[nodiscard]] bool processor_status_flag(ProcessorStatusFlag flag) const noexcept;
-         void update_zero_and_negative_flag(Data value) noexcept;
+         void update_zero_and_negative_flag(Byte value) noexcept;
 
-         void push(Data value) noexcept;
-         [[nodiscard]] Data pop() noexcept;
+         void write_to_stack(Byte value) const noexcept;
+         [[nodiscard]] Byte read_from_stack() const noexcept;
 
-         [[nodiscard]] static Address assemble_address(Data high_byte, Data low_byte) noexcept;
-         [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, Data value) noexcept;
-         [[nodiscard]] static std::pair<Address, bool> add_low_byte(Address address, SignedData value) noexcept;
-         [[nodiscard]] static std::pair<Address, bool> add_high_byte(Address address, Data value) noexcept;
-         [[nodiscard]] static std::pair<Address, bool> subtract_high_byte(Address address, Data value) noexcept;
+         [[nodiscard]] static constexpr Byte low_byte(Word source) noexcept;
+         [[nodiscard]] static constexpr Byte high_byte(Word source) noexcept;
+         [[nodiscard]] static constexpr Word assemble_word(Byte high, Byte low) noexcept;
+         [[nodiscard]] static constexpr Word assign_low_byte(Word target, Byte value) noexcept;
+         [[nodiscard]] static constexpr Word assign_high_byte(Word target, Byte value) noexcept;
+         [[nodiscard]] static constexpr std::pair<Byte, bool> add_with_overflow(Byte left, Byte right) noexcept;
+         [[nodiscard]] static constexpr std::pair<Byte, SignedByte> add_with_overflow(Byte left, SignedByte right) noexcept;
          // ---
 
          Memory& memory_;

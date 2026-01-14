@@ -5,16 +5,16 @@
 
 namespace nes
 {
+   using Byte = std::uint8_t;
+   using SignedByte = std::int8_t;
+   using Word = std::uint16_t;
    using Cycle = std::uint64_t;
-   using Address = std::uint16_t;
-   using ProgramCounter = std::uint16_t;
-   using Accumulator = std::uint8_t;
-   using Index = std::uint8_t;
-   using StackPointer = std::uint8_t;
-   using ProcessorStatus = std::uint8_t;
 
-   using Data = std::uint8_t;
-   using SignedData = std::int8_t;
+   using ProgramCounter = Word;
+   using Accumulator = Byte;
+   using Index = Byte;
+   using StackPointer = Byte;
+   using ProcessorStatus = Byte;
 }
 
 #endif

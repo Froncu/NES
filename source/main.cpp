@@ -24,7 +24,7 @@ catch (nes::UnsupportedOpcode const& exception)
 
 void try_step(nes::Processor& processor) try
 {
-   processor.step();
+   while (not processor.tick());
 }
 catch (nes::UnsupportedOpcode const& exception)
 {
