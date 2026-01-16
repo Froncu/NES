@@ -686,7 +686,7 @@ namespace nes
       co_await std::suspend_always{};
 
       // pull register from stack (with B and _ flag ignored)
-      processor_status_ = processor_status_ & 0b00'11'00'00 | read_from_stack(); // TODO: make this cleaner
+      processor_status_ = (processor_status_ & 0b00'11'00'00) | read_from_stack(); // TODO: make this cleaner
       co_return std::nullopt;
    }
 
@@ -708,7 +708,7 @@ namespace nes
       co_await std::suspend_always{};
 
       // pull P from stack, increment S
-      processor_status_ = processor_status_ & 0b00'11'00'00 | read_from_stack(); // TODO: make this cleaner
+      processor_status_ = (processor_status_ & 0b00'11'00'00) | read_from_stack(); // TODO: make this cleaner
       ++stack_pointer_;
       co_await std::suspend_always{};
 

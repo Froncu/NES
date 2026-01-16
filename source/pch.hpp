@@ -6,13 +6,14 @@
 #include <chrono>
 #include <cmath>
 #include <condition_variable>
+#include <coroutine>
 #include <cstdint>
+#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <functional>
-#include <generator>
 #include <iostream>
 #include <mutex>
 #include <optional>
@@ -21,14 +22,16 @@
 #include <source_location>
 #include <string_view>
 #include <thread>
-#include <thread>
 #include <typeindex>
 #include <unordered_set>
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
-#include <nfd.hpp>
 #include <SDL3/SDL.h>
+
+#ifndef EMSCRIPTEN
+#include <nfd.hpp>
+#endif
 
 #endif

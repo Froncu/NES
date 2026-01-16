@@ -36,31 +36,20 @@ namespace nes
 
    Visualiser::Visualiser() noexcept
    {
+      #ifndef EMSCRIPTEN
       NFD::Init();
+      #endif
    }
 
    Visualiser::~Visualiser() noexcept
    {
+      #ifndef EMSCRIPTEN
       NFD::Quit();
+      #endif
    }
 
    bool Visualiser::update(Memory const& memory, Processor& processor) noexcept
    {
-      SDL_Event event;
-      while (SDL_PollEvent(&event))
-      {
-         ImGui_ImplSDL3_ProcessEvent(&event);
-
-         switch (event.type)
-         {
-            case SDL_EVENT_QUIT:
-               return false;
-
-            default:
-               break;
-         }
-      }
-
       ImGui_ImplSDLRenderer3_NewFrame();
       ImGui_ImplSDL3_NewFrame();
       ImGui::NewFrame();
@@ -125,11 +114,12 @@ namespace nes
                ImGui::InputInt("Bytes per row", &bytes_per_row_, 1, 1);
                ImGui::InputInt("Visible rows", &visible_rows_, 1, 1);
 
+               #ifndef EMSCRIPTEN
                if (ImGui::Button("Select program"))
                {
                   NFD::UniquePath program_path;
                   std::array constexpr filters{ nfdu8filteritem_t{ "Binaries", "bin" } };
-                  switch (NFD::OpenDialog(program_path, filters.data(), static_cast<nfdfiltersize_t>(filters.size())))
+                  switch (OpenDialog(program_path, filters.data(), static_cast<nfdfiltersize_t>(filters.size())))
                   {
                      case NFD_OKAY:
                         program_path_ = program_path.get();
@@ -144,10 +134,12 @@ namespace nes
                         break;
                   }
                }
+               #endif
+
                if (exists(program_path_))
                {
                   ImGui::SameLine();
-                  ImGui::Text(program_path_.filename().string().c_str());
+                  ImGui::Text("%s", program_path_.filename().string().c_str());
                }
 
                ImGui::InputScalar("Load address", ImGuiDataType_U16, &program_load_address_, nullptr, nullptr,
@@ -179,7 +171,7 @@ namespace nes
                };
 
                ProcessorStatus const processor_status{ processor.processor_status() };
-               ImGui::Text(std::format("P: {}{}{}{}{}{}{}{}",
+               ImGui::Text("%s", std::format("P: {}{}{}{}{}{}{}{}",
                   processor_status & cast(Processor::ProcessorStatusFlag::N) ? 'N' : '-',
                   processor_status & cast(Processor::ProcessorStatusFlag::V) ? 'V' : '-',
                   processor_status & cast(Processor::ProcessorStatusFlag::_) ? '_' : '-',

@@ -92,11 +92,7 @@ namespace nes
             break;
       }
 
-      std::time_t const now{ std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) };
-      std::tm local_time;
-      localtime_s(&local_time, &now);
-      std::ostringstream time_stream;
-      time_stream << std::put_time(&local_time, "%H:%M:%S");
+      std::string const local_time{ std::format("{:%H:%M:%S}", std::chrono::system_clock::now()) };
 
       if constexpr (MINGW)
          *output_stream << std::format(
@@ -104,7 +100,7 @@ namespace nes
             esc_sequence,
             payload.location.file_name(),
             payload.location.line(),
-            time_stream.str(),
+            local_time,
             payload.message);
       else
          std::println(*output_stream,
@@ -112,7 +108,7 @@ namespace nes
             esc_sequence,
             payload.location.file_name(),
             payload.location.line(),
-            time_stream.str(),
+            local_time,
             payload.message);
    }
 

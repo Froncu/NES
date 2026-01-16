@@ -4,10 +4,19 @@
       {
          "name" : "default",
          "generator" : "Ninja Multi-Config",
-         "binaryDir" : "${sourceDir}/build",
+         "binaryDir" : "${sourceDir}/build/${presetName}",
+         "toolchainFile" : "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
          "cacheVariables" : {
-            "CMAKE_TOOLCHAIN_FILE" : "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "VCPKG_MANIFEST_DIR" : "${sourceDir}"
+         }
+      },
+      {
+         "name": "emscripten",
+         "inherits" : "default",
+         "generator" : "Ninja",
+         "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Release",
+            "VCPKG_CHAINLOAD_TOOLCHAIN_FILE" : "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
          }
       }
    ],
