@@ -30,7 +30,9 @@
 #include <imgui_impl_sdlrenderer3.h>
 #include <SDL3/SDL.h>
 
-#ifndef EMSCRIPTEN
+#ifdef EMSCRIPTEN
+#include <emscripten/emscripten.h>
+#else
 #include <nfd.hpp>
 #endif
 

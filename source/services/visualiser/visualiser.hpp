@@ -62,10 +62,9 @@ namespace nes
          [[nodiscard]] bool load_program_requested() const noexcept;
 
       private:
-         SDL_Context const context_ = {};
+         SDL_Context const context_{};
 
-         UniquePointer<SDL_Window> const window_ =
-         {
+         UniquePointer<SDL_Window> const window_{
             []
             {
                SDL_Window* const window{ SDL_CreateWindow("Emulator", 1280, 720, SDL_WINDOW_RESIZABLE) };
@@ -76,8 +75,7 @@ namespace nes
             SDL_DestroyWindow
          };
 
-         UniquePointer<SDL_Renderer> const renderer_ =
-         {
+         UniquePointer<SDL_Renderer> const renderer_{
             [this]
             {
                SDL_Renderer* const renderer{ SDL_CreateRenderer(window_.get(), nullptr) };
