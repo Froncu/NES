@@ -4,7 +4,7 @@ namespace nes
 {
    Visualiser::SDL_Context::SDL_Context() noexcept
    {
-      bool const succeeded{ SDL_Init(initialisation_flags_) };
+      bool const succeeded{ SDL_InitSubSystem(initialisation_flags_) };
       runtime_assert(succeeded, std::format("failed to initialise SDL ({})", SDL_GetError()));
    }
 
@@ -114,6 +114,7 @@ namespace nes
                ImGui::InputInt("Bytes per row", &bytes_per_row_, 1, 1);
                ImGui::InputInt("Visible rows", &visible_rows_, 1, 1);
 
+               // TODO: figure out how to upload local files
                #ifndef EMSCRIPTEN
                if (ImGui::Button("Select program"))
                {

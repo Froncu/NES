@@ -1,7 +1,7 @@
 #ifndef APPLICATION_HPP
 #define APPLICATION_HPP
 
-#include "application/application.hpp"
+#include "application.hpp"
 #include "exceptions/unsupported_opcode.hpp"
 #include "hardware/memory/memory.hpp"
 #include "hardware/processor/processor.hpp"
